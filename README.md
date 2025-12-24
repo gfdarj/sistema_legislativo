@@ -27,9 +27,18 @@ Plataforma DJANGO para tentar substituir a planilha por uma interface gráfica w
 
       python manage.py runserver
 
-* Salvando os Requerimentos da aplicação
+* Requerimentos
 
-      pip freeze > requirements.txt
+  * Salvando os Requerimentos da aplicação
+
+        pip freeze > requirements.txt
+
+  * Carregando os requerimentos
+
+        pip install -r requirements.txt
+
+
+
 
 
 
