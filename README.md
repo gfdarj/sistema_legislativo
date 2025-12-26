@@ -23,6 +23,10 @@ Plataforma DJANGO para tentar substituir a planilha por uma interface gráfica w
       cd meuprojeto
       python manage.py startapp minha_app
 
+* Criar o super usuário do django admin
+
+      python manage.py createsuperuser
+
 * Rodar o Servidor de Desenvolvimento
 
       python manage.py runserver
