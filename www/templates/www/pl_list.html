@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Projetos de Lei</h3>
+<a href="{% url 'pl_create' %}" class="btn btn-primary mb-3">Novo PL</a>
+
+<table class="table table-striped">
+    {% for pl in object_list %}
+    <tr>
+        <td>
+            <a href="{% url 'pl_detail' pl.id %}">{{ pl }}</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

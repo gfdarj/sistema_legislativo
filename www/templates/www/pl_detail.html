@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>{{ object }}</h3>
+
+<p><strong>Ementa:</strong> {{ object.ementa }}</p>
+
+<h5>Tramitação</h5>
+<ul class="list-group">
+{% for t in object.tramitacoes.all %}
+    <li class="list-group-item">
+        {{ t.data_evento|date:"d/m/Y" }} - {{ t.descricao }}
+    </li>
+{% empty %}
+    <li class="list-group-item text-muted">Sem tramitação</li>
+{% endfor %}
+</ul>
+{% endblock %}
