@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>{{ object }}</h3>
+<h5>Tramitação</h5>
+<ul>
+{% for t in object.tramitacoes.all %}
+<li>{{ t.data_evento }} - {{ t.descricao }}</li>
+{% endfor %}
+</ul>
+{% endblock %}
