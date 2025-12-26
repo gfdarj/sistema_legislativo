@@ -1,0 +1,137 @@
+[
+  {
+    "model": "www.comissao",
+    "pk": 1,
+    "fields": {
+      "sigla": "CCJ",
+      "nome": "Comissão de Constituição e Justiça",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 2,
+    "fields": {
+      "sigla": "COFFFC",
+      "nome": "Comissão de Orçamento, Finanças, Fiscalização Financeira e Controle",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 3,
+    "fields": {
+      "sigla": "CEDU",
+      "nome": "Comissão de Educação",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 4,
+    "fields": {
+      "sigla": "CSA",
+      "nome": "Comissão de Saúde",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 5,
+    "fields": {
+      "sigla": "CTRAB",
+      "nome": "Comissão de Trabalho, Legislação Social e Seguridade Social",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 6,
+    "fields": {
+      "sigla": "CDEF",
+      "nome": "Comissão de Defesa do Consumidor",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 7,
+    "fields": {
+      "sigla": "CDH",
+      "nome": "Comissão de Defesa dos Direitos Humanos e Cidadania",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 8,
+    "fields": {
+      "sigla": "CSEG",
+      "nome": "Comissão de Segurança Pública e Assuntos de Polícia",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 9,
+    "fields": {
+      "sigla": "CMEIO",
+      "nome": "Comissão de Meio Ambiente",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 10,
+    "fields": {
+      "sigla": "CTUR",
+      "nome": "Comissão de Turismo",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 11,
+    "fields": {
+      "sigla": "CCULT",
+      "nome": "Comissão de Cultura",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 12,
+    "fields": {
+      "sigla": "CESP",
+      "nome": "Comissão de Esporte e Lazer",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 13,
+    "fields": {
+      "sigla": "CCTI",
+      "nome": "Comissão de Ciência e Tecnologia",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 14,
+    "fields": {
+      "sigla": "CMUL",
+      "nome": "Comissão de Defesa dos Direitos da Mulher",
+      "ativa": true
+    }
+  },
+  {
+    "model": "www.comissao",
+    "pk": 15,
+    "fields": {
+      "sigla": "CPESS",
+      "nome": "Comissão de Servidores Públicos",
+      "ativa": true
+    }
+  }
+]

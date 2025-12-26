@@ -1,17 +1,42 @@
 {% extends "base.html" %}
+
 {% block content %}
 <h3>Dashboard Legislativo</h3>
 
-<p><strong>PLs aguardando parecer:</strong> {{ pls_aguardando_parecer }}</p>
-<p><strong>Tempo médio de tramitação:</strong> {{ tempo_medio_tramitacao }} dias</p>
-
-<h5>PLs por Comissão</h5>
-<table class="table table-bordered">
-    {% for c in pls_por_comissao %}
+<h5 class="mt-4">Proposições por Tipo</h5>
+<table class="table table-bordered table-sm">
     <tr>
-        <td>{{ c.nome|default:"Sem comissão" }}</td>
-        <td>{{ c.total }}</td>
+        <th>Tipo</th>
+        <th>Total</th>
+    </tr>
+    {% for t in proposicoes_por_tipo %}
+    <tr>
+        <td>{{ t.tipo__nome }}</td>
+        <td>{{ t.total }}</td>
     </tr>
     {% endfor %}
 </table>
+
+<h5 class="mt-4">Aguardando Parecer (por Tipo)</h5>
+<table class="table table-bordered table-sm">
+    <tr>
+        <th>Tipo</th>
+        <th>Total</th>
+    </tr>
+    {% for a in aguardando_parecer_por_tipo %}
+    <tr>
+        <td>{{ a.tipo__nome }}</td>
+        <td>{{ a.total }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="2" class="text-muted">Nenhuma aguardando parecer</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h5 class="mt-4">Tempo médio de tramitação</h5>
+<p>
+    <strong>{{ tempo_medio_tramitacao }}</strong> dias
+</p>
 {% endblock %}

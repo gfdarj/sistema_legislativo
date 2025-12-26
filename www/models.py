@@ -40,8 +40,11 @@ class Comissao(models.Model):
     nome = models.CharField(max_length=255)
     ativa = models.BooleanField(default=True)
 
+    class Meta:
+        ordering = ["nome"]
+
     def __str__(self):
-        return self.sigla
+        return self.nome
 
 
 class ProjetoLei(models.Model):
