@@ -1,8 +1,8 @@
-from django.views.generic import ListView, DetailView, CreateView, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, TemplateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.db.models import Count, F
 
-from .models import ProjetoLei
+from .models import ProjetoLei, Autor
 
 
 class ProjetoLeiListView(ListView):
@@ -54,3 +54,29 @@ class DashboardView(TemplateView):
         )
 
         return context
+
+
+
+class AutorListView(ListView):
+    model = Autor
+    template_name = "www/autor_list.html"
+
+
+class AutorCreateView(CreateView):
+    model = Autor
+    fields = ["chave", "nome", "sexo"]
+    template_name = "www/autor_form.html"
+    success_url = reverse_lazy("autor_list")
+
+
+class AutorUpdateView(UpdateView):
+    model = Autor
+    fields = ["chave", "nome", "sexo"]
+    template_name = "www/autor_form.html"
+    success_url = reverse_lazy("autor_list")
+
+
+class AutorDeleteView(DeleteView):
+    model = Autor
+    template_name = "www/autor_confirm_delete.html"
+    success_url = reverse_lazy("autor_list")

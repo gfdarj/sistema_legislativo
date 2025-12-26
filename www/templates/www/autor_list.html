@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Autores</h3>
+
+<a href="{% url 'autor_create' %}" class="btn btn-primary mb-3">
+    Novo Autor
+</a>
+
+<table class="table table-striped">
+    <tr>
+        <th>Chave</th>
+        <th>Nome</th>
+        <th>Sexo</th>
+        <th>Ações</th>
+    </tr>
+    {% for autor in object_list %}
+    <tr>
+        <td>{{ autor.chave }}</td>
+        <td>{{ autor.nome }}</td>
+        <td>{{ autor.get_sexo_display }}</td>
+        <td>
+            <a href="{% url 'autor_update' autor.id %}" class="btn btn-sm btn-warning">
+                Editar
+            </a>
+            <a href="{% url 'autor_delete' autor.id %}" class="btn btn-sm btn-danger">
+                Excluir
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

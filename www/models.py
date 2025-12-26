@@ -1,5 +1,26 @@
 from django.db import models
 
+class TipoProposicao(models.Model):
+    chave = models.CharField(
+        max_length=10,
+        unique=True,
+        help_text="Código curto do tipo de proposição (até 10 caracteres)"
+    )
+    nome = models.CharField(
+        max_length=100,
+        unique=True
+    )
+    ativo = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Tipo de Proposição"
+        verbose_name_plural = "Tipos de Proposição"
+        ordering = ["nome"]
+
+    def __str__(self):
+        return f"{self.nome}"
+
+
 class Autor(models.Model):
     SEXO_CHOICES = [
         ("M", "Masculino"),
@@ -24,8 +45,12 @@ class Comissao(models.Model):
 
 
 class ProjetoLei(models.Model):
-    tipo = models.CharField(max_length=10)
-    numero_pl = models.CharField(max_length=30, unique=True)
+    tipo = models.ForeignKey(
+        TipoProposicao,
+        on_delete=models.PROTECT,
+        related_name="projetos"
+    )
+    numero_pl = models.CharField(max_length=20)
     ementa = models.TextField()
 
     autores = models.ManyToManyField(Autor, related_name="projetos_autoria")
@@ -44,6 +69,14 @@ class ProjetoLei(models.Model):
         null=True,
         blank=True
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tipo", "numero_pl"],
+                name="unique_numero_por_tipo"
+            )
+        ]
 
     def __str__(self):
         return f"{self.tipo} {self.numero_pl}"

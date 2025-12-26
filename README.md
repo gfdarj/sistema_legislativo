@@ -41,6 +41,12 @@ Plataforma DJANGO para tentar substituir a planilha por uma interface gráfica w
 
         pip install -r requirements.txt
 
+* Carregando dados de arquivos JSON
+
+      python manage.py loaddata tipos_proposicao
+
+      obs: o Python lê diretamente da pasta "fixtures"
+
 
 
 
