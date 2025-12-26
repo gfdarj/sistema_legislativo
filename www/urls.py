@@ -1,17 +1,30 @@
 from django.urls import path
-from .views import *
+from www.views import *
 
 urlpatterns = [
-    path("", ProjetoLeiListView.as_view(), name="pl_list"),
-    path("novo/", ProjetoLeiCreateView.as_view(), name="pl_create"),
-    path("<int:pk>/", ProjetoLeiDetailView.as_view(), name="pl_detail"),
-    path("dashboard/", DashboardView.as_view(), name="dashboard"),
 
-    # Autores
+    path("", DashboardView.as_view(), name="dashboard"),
+
+
+    path("proposicao/", ProposicaoListView.as_view(), name="proposicao_list"),
+    path("proposicao/nova/", ProposicaoCreateView.as_view(), name="proposicao_create"),
+    path("proposicao/<int:pk>/editar/", ProposicaoUpdateView.as_view(), name="proposicao_update"),
+
+
+    path("proposicao/<int:proposicao_id>/tramitacoes/", TramitacaoListView.as_view(), name="tramitacao_list"),
+    path("proposicao/<int:proposicao_id>/tramitacoes/nova/", TramitacaoCreateView.as_view(), name="tramitacao_create"),
+
+
     path("autores/", AutorListView.as_view(), name="autor_list"),
     path("autores/novo/", AutorCreateView.as_view(), name="autor_create"),
     path("autores/<int:pk>/editar/", AutorUpdateView.as_view(), name="autor_update"),
     path("autores/<int:pk>/excluir/", AutorDeleteView.as_view(), name="autor_delete"),
+
+
+    path("tipos/", TipoProposicaoListView.as_view(), name="tipo_list"),
+
+
+    path("comissoes/", ComissaoListView.as_view(), name="comissao_list"),
 
 ]
 

@@ -1,33 +1,43 @@
 {% extends "base.html" %}
-
 {% block content %}
+
 <h3>Autores</h3>
 
-<a href="{% url 'autor_create' %}" class="btn btn-primary mb-3">
-    Novo Autor
-</a>
+<div class="mb-3">
+    <a href="?ativo=1" class="btn btn-success btn-sm">Ativos</a>
+    <a href="?ativo=0" class="btn btn-secondary btn-sm">Inativos</a>
+    <a href="{% url 'autor_list' %}" class="btn btn-outline-dark btn-sm">Todos</a>
+</div>
+
+<a href="{% url 'autor_create' %}" class="btn btn-primary mb-3">Novo Autor</a>
 
 <table class="table table-striped">
-    <tr>
-        <th>Chave</th>
-        <th>Nome</th>
-        <th>Sexo</th>
-        <th>Ações</th>
-    </tr>
-    {% for autor in object_list %}
-    <tr>
-        <td>{{ autor.chave }}</td>
-        <td>{{ autor.nome }}</td>
-        <td>{{ autor.get_sexo_display }}</td>
-        <td>
-            <a href="{% url 'autor_update' autor.id %}" class="btn btn-sm btn-warning">
-                Editar
-            </a>
-            <a href="{% url 'autor_delete' autor.id %}" class="btn btn-sm btn-danger">
-                Excluir
-            </a>
-        </td>
-    </tr>
-    {% endfor %}
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Sexo</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for autor in autores %}
+        <tr>
+            <td>{{ autor.nome }}</td>
+            <td>{{ autor.get_sexo_display }}</td>
+            <td>
+                {% if autor.ativo %}
+                    <span class="badge bg-success">Ativo</span>
+                {% else %}
+                    <span class="badge bg-secondary">Inativo</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'autor_update' autor.pk %}">Editar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
+
 {% endblock %}

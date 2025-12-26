@@ -1,4 +1,20 @@
 from django.db import models
+from django.conf import settings
+
+#-- cria o perfil do usuário
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+@receiver(post_save, sender=User)
+def criar_perfil_usuario(sender, instance, created, **kwargs):
+    if created:
+        PerfilUsuario.objects.create(user=instance)
+#--
+
+
 
 class TipoProposicao(models.Model):
     chave = models.CharField(
@@ -22,18 +38,24 @@ class TipoProposicao(models.Model):
 
 
 class Autor(models.Model):
-    SEXO_CHOICES = [
-        ("M", "Masculino"),
-        ("F", "Feminino"),
-    ]
+    nome = models.CharField(max_length=150)
+    sexo = models.CharField(
+        max_length=1,
+        choices=[
+            ("M", "Masculino"),
+            ("F", "Feminino"),
+        ]
+    )
+    ativo = models.BooleanField(default=True)
 
-    chave = models.CharField(max_length=20, unique=True)
-    nome = models.CharField(max_length=255)
-    sexo = models.CharField(max_length=1, choices=SEXO_CHOICES)
+    class Meta:
+        verbose_name = "Autor"
+        verbose_name_plural = "Autores"
+        ordering = ["nome"]
 
     def __str__(self):
-        return self.nome
-
+        status = "" if self.ativo else " (inativo)"
+        return f"{self.nome}{status}"
 
 class Comissao(models.Model):
     sigla = models.CharField(max_length=20, unique=True)
@@ -47,16 +69,16 @@ class Comissao(models.Model):
         return self.nome
 
 
-class ProjetoLei(models.Model):
+class Proposicao(models.Model):
     tipo = models.ForeignKey(
         TipoProposicao,
         on_delete=models.PROTECT,
-        related_name="projetos"
+        related_name="proposicoes"
     )
-    numero_pl = models.CharField(max_length=20)
+    numero = models.CharField(max_length=20)
     ementa = models.TextField()
 
-    autores = models.ManyToManyField(Autor, related_name="projetos_autoria")
+    autores = models.ManyToManyField(Autor, related_name="proposicoes_autoria")
 
     relator = models.ForeignKey(
         Autor,
@@ -76,18 +98,18 @@ class ProjetoLei(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["tipo", "numero_pl"],
+                fields=["tipo", "numero"],
                 name="unique_numero_por_tipo"
             )
         ]
 
     def __str__(self):
-        return f"{self.tipo} {self.numero_pl}"
+        return f"{self.tipo} {self.numero}"
 
 
 class Parecer(models.Model):
     projeto = models.ForeignKey(
-        ProjetoLei,
+        Proposicao,
         on_delete=models.CASCADE,
         related_name="pareceres"
     )
@@ -113,7 +135,7 @@ class Parecer(models.Model):
 
 class Tramitacao(models.Model):
     projeto = models.ForeignKey(
-        ProjetoLei,
+        Proposicao,
         on_delete=models.CASCADE,
         related_name="tramitacoes"
     )
@@ -128,3 +150,34 @@ class Tramitacao(models.Model):
     data_evento = models.DateField()
     descricao = models.CharField(max_length=255)
     observacao = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["data_evento"]
+
+    def __str__(self):
+        return f"{self.projeto} - {self.data_evento}"
+
+
+
+
+class PerfilUsuario(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="perfil"
+    )
+
+    comissao_padrao = models.ForeignKey(
+        Comissao,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = "Perfil do Usuário"
+        verbose_name_plural = "Perfis de Usuários"
+
+    def __str__(self):
+        return self.user.get_username()
+

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mb-4">Proposição</h3>
+
+<form method="post">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <!-- IDENTIFICAÇÃO -->
+    <div class="card mb-3">
+        <div class="card-header">Identificação</div>
+        <div class="card-body">
+
+            <!-- Linha 1 -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Tipo de Proposição</label>
+                    {{ form.tipo }}
+                    {{ form.tipo.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Número</label>
+                    {{ form.numero }}
+                    {{ form.numero.errors }}
+                </div>
+            </div>
+
+            <!-- Linha 2 -->
+            <div class="row">
+                <div class="col-12">
+                    <label class="form-label">Comissão Atual</label>
+                    {{ form.comissao_atual }}
+                    {{ form.comissao_atual.errors }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- AUTORIA -->
+    <div class="card mb-3">
+        <div class="card-header">Autoria</div>
+        <div class="card-body">
+
+            <div class="mb-3">
+                <label class="form-label">Autores</label>
+                {{ form.autores }}
+                {{ form.autores.errors }}
+                <div class="form-text">
+                    Use CTRL (ou CMD) para selecionar múltiplos autores
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Relator</label>
+                {{ form.relator }}
+                {{ form.relator.errors }}
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CONTEÚDO -->
+    <div class="card mb-4">
+        <div class="card-header">Conteúdo</div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Ementa</label>
+                {{ form.ementa }}
+                {{ form.ementa.errors }}
+            </div>
+        </div>
+    </div>
+
+    <!-- AÇÕES -->
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            Salvar
+        </button>
+        <a href="{% url 'proposicao_list' %}" class="btn btn-secondary">
+            Voltar
+        </a>
+    </div>
+
+</form>
+{% endblock %}

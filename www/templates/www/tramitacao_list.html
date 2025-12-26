@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h4>
+    Tramitação –
+    {{ pl.tipo.chave }} {{ pl.numero_pl }}
+</h4>
+
+<a href="{% url 'projeto_tramitacao_create' pl.id %}"
+   class="btn btn-sm btn-primary mb-3">
+    Nova Tramitação
+</a>
+
+<table class="table table-striped table-sm">
+    <tr>
+        <th>Data</th>
+        <th>Comissão</th>
+        <th>Descrição</th>
+    </tr>
+
+    {% for t in object_list %}
+    <tr>
+        <td>{{ t.data_evento|date:"d/m/Y" }}</td>
+        <td>{{ t.comissao }}</td>
+        <td>{{ t.descricao }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="3" class="text-muted">
+            Nenhuma tramitação registrada
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<a href="{% url 'projeto_list' %}" class="btn btn-secondary">
+    Voltar aos Projetos
+</a>
+{% endblock %}
