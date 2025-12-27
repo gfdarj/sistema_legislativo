@@ -323,20 +323,23 @@ class TramitacaoCreateView(LoginRequiredMixin, CreateView):
 
         return super().form_valid(form)
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
 
-        # 👇 pré-preenche a comissão do perfil
-        form.fields["comissao"].initial = (
-            self.request.user.perfil.comissao_padrao
-        )
+    def get_initial(self):
+        initial = super().get_initial()
 
-        return form
+        if self.request.method == "GET":
+            initial["comissao"] = (
+                self.request.user.perfil.comissao_padrao
+            )
+
+        return initial
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["proposicao"] = self.proposicao
         return context
+
 
     def get_success_url(self):
         return reverse_lazy(

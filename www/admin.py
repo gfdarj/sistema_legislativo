@@ -1,9 +1,8 @@
 from django.contrib import admin
-from www.models import TipoProposicao, Autor, Comissao, Proposicao, Parecer, Tramitacao, PerfilUsuario
+from www.models import TipoProposicao, Autor, Comissao, Proposicao, Tramitacao, PerfilUsuario
 
 admin.site.register(Autor)
 admin.site.register(Proposicao)
-admin.site.register(Parecer)
 admin.site.register(Tramitacao)
 
 # Register your models here.

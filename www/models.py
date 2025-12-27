@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-
+from django_ckeditor_5.fields import CKEditor5Field
 #-- cria o perfil do usuário
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -15,6 +15,7 @@ def criar_perfil_usuario(sender, instance, created, **kwargs):
 #--
 
 
+#########################################################################################
 
 class TipoProposicao(models.Model):
     sigla = models.CharField(
@@ -36,6 +37,8 @@ class TipoProposicao(models.Model):
     def __str__(self):
         return f"{self.nome}"
 
+
+#########################################################################################
 
 class Autor(models.Model):
     nome = models.CharField(max_length=150)
@@ -68,6 +71,8 @@ class Comissao(models.Model):
     def __str__(self):
         return self.nome
 
+
+#########################################################################################
 
 class Proposicao(models.Model):
     tipo = models.ForeignKey(
@@ -106,31 +111,7 @@ class Proposicao(models.Model):
         return ultima.relator if ultima else None
 
 
-
-class Parecer(models.Model):
-    projeto = models.ForeignKey(
-        Proposicao,
-        on_delete=models.CASCADE,
-        related_name="pareceres"
-    )
-
-    relator = models.ForeignKey(
-        Autor,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-
-    comissao = models.ForeignKey(
-        Comissao,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-
-    tipo = models.CharField(max_length=30)
-    texto = models.TextField()
-    data_parecer = models.DateField()
+#########################################################################################
 
 
 class Tramitacao(models.Model):
@@ -157,6 +138,25 @@ class Tramitacao(models.Model):
     descricao = models.CharField(max_length=255)
     observacao = models.TextField(blank=True, null=True)
 
+    parecer = models.CharField(max_length=100, blank=True, null=True)
+    texto_parecer = CKEditor5Field(
+        "Texto do Parecer",
+        blank=True,
+        null=True,
+        config_name="default"
+    )
+    data_parecer = models.DateField(blank=True, null=True)
+
+    parecer_vencido = models.CharField(max_length=100)
+    texto_parecer_vencido = CKEditor5Field(
+        "Texto do Parecer Vencido",
+        blank=True,
+        null=True,
+        config_name="default"
+    )
+    data_parecer_vencido = models.DateField(blank=True, null=True)
+
+    data_publicacao_parecer = models.DateField(blank=True, null=True)
 
     class Meta:
         ordering = ["data_evento"]
@@ -168,7 +168,7 @@ class Tramitacao(models.Model):
         )
 
 
-
+#########################################################################################
 
 class PerfilUsuario(models.Model):
     user = models.OneToOneField(

@@ -1,64 +1,159 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h3 class="mb-4">Nova Tramitação</h3>
+<h3>Tramitação</h3>
 
-    {% if form.errors %}
-<div class="alert alert-danger">
-    <strong>Erros no formulário:</strong>
-    <ul class="mb-0">
-        {% for field, errors in form.errors.items %}
-            <li>{{ field }}: {{ errors|join:", " }}</li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %}
-
-<form method="post" class="card p-4 shadow-sm">
+<form method="post">
     {% csrf_token %}
+    {{ form.media }}
 
-    <!-- Linha 1 -->
-    <div class="row mb-3">
-        <div class="col-md-6">
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+
+    <!-- Comissão + Relator -->
+    <div class="row">
+        <div class="col-md-6 mb-3">
             <label class="form-label">Comissão</label>
             {{ form.comissao }}
+            {% if form.comissao.errors %}
+            <div class="text-danger">{{ form.comissao.errors }}</div>
+            {% endif %}
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-6 mb-3">
             <label class="form-label">Relator</label>
             {{ form.relator }}
+            {% if form.relator.errors %}
+            <div class="text-danger">{{ form.relator.errors }}</div>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Linha 2 -->
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label class="form-label">Data da Tramitação</label>
+    <!-- Descrição + Data do Evento -->
+    <div class="row">
+            <div class="col-md-4 mb-3">
+            <label class="form-label">Data do Evento</label>
             {{ form.data_evento }}
+            {% if form.data_evento.errors %}
+            <div class="text-danger">{{ form.data_evento.errors }}</div>
+            {% endif %}
         </div>
-
-        <div class="col-md-8">
+        <div class="col-md-8 mb-3">
             <label class="form-label">Descrição</label>
             {{ form.descricao }}
+            {% if form.descricao.errors %}
+            <div class="text-danger">{{ form.descricao.errors }}</div>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Linha 3 -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <label class="form-label">Observações</label>
-            {{ form.observacao }}
+    <!-- Observação -->
+    <div class="mb-3">
+        <label class="form-label">Observação</label>
+        {{ form.observacao }}
+        {% if form.observacao.errors %}
+        <div class="text-danger">{{ form.observacao.errors }}</div>
+        {% endif %}
+    </div>
+
+    <hr>
+
+    <h5>Parecer</h5>
+
+    <div class="mb-3">
+        <label class="form-label">Parecer</label>
+        {{ form.parecer }}
+        {% if form.parecer.errors %}
+        <div class="text-danger">{{ form.parecer.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Texto do Parecer</label>
+        {{ form.texto_parecer }}
+        {% if form.texto_parecer.errors %}
+        <div class="text-danger">{{ form.texto_parecer.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Data do Parecer</label>
+        {{ form.data_parecer }}
+        {% if form.data_parecer.errors %}
+        <div class="text-danger">{{ form.data_parecer.errors }}</div>
+        {% endif %}
+    </div>
+
+    <hr>
+
+    <div class="mb-3 form-check">
+        {{ form.existe_parecer_vencido }}
+        <label class="form-check-label" for="{{ form.existe_parecer_vencido.id_for_label }}">
+            Existe parecer vencido?
+        </label>
+        {% if form.existe_parecer_vencido.errors %}
+        <div class="text-danger">{{ form.existe_parecer_vencido.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div id="bloco-parecer-vencido" style="display: none;">
+        <h5>Parecer Vencido</h5>
+
+        <div class="mb-3">
+            <label class="form-label">Parecer Vencido</label>
+            {{ form.parecer_vencido }}
+            {% if form.parecer_vencido.errors %}
+            <div class="text-danger">{{ form.parecer_vencido.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Texto do Parecer Vencido</label>
+            {{ form.texto_parecer_vencido }}
+            {% if form.texto_parecer_vencido.errors %}
+            <div class="text-danger">{{ form.texto_parecer_vencido.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Data do Parecer Vencido</label>
+            {{ form.data_parecer_vencido }}
+            {% if form.data_parecer_vencido.errors %}
+            <div class="text-danger">{{ form.data_parecer_vencido.errors }}</div>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Botões -->
-    <div class="d-flex justify-content-end gap-2">
-        <a href="{% url 'tramitacao_list' proposicao.id %}" class="btn btn-secondary">
-            Cancelar
-        </a>
-        <button type="submit" class="btn btn-primary">
-            Salvar Tramitação
-        </button>
+    <hr>
+
+    <div class="mb-3">
+        <label class="form-label">Data de Publicação do Parecer</label>
+        {{ form.data_publicacao_parecer }}
+        {% if form.data_publicacao_parecer.errors %}
+        <div class="text-danger">{{ form.data_publicacao_parecer.errors }}</div>
+        {% endif %}
     </div>
+
+    <button class="btn btn-primary">Salvar</button>
+    <a href="{% url 'tramitacao_list' proposicao.id %}" class="btn btn-secondary">Voltar</a>
 </form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const checkbox = document.getElementById("id_existe_parecer_vencido");
+    const bloco = document.getElementById("bloco-parecer-vencido");
+
+    function toggleBloco() {
+        bloco.style.display = checkbox.checked ? "block" : "none";
+    }
+
+    toggleBloco();
+    checkbox.addEventListener("change", toggleBloco);
+});
+</script>
+
+<br>
 {% endblock %}

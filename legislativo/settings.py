@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'www',
+    'django_ckeditor_5',
 ]
 
 MIDDLEWARE = [
@@ -120,3 +121,33 @@ STATIC_URL = 'static/'
 LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
+
+
+CKEDITOR_5_CONFIGS = {
+    "default": {
+        "toolbar": [
+            "heading",
+            "|",
+            "bold", "italic", "underline", "strikethrough",
+            "|",
+            "bulletedList", "numberedList",
+            "|",
+            "blockQuote",
+            "link",
+            "|",
+            "undo", "redo",
+        ],
+        "heading": {
+            "options": [
+                {"model": "paragraph", "title": "Parágrafo"},
+                {"model": "heading1", "view": "h1", "title": "Título 1"},
+                {"model": "heading2", "view": "h2", "title": "Título 2"},
+                {"model": "heading3", "view": "h3", "title": "Título 3"},
+            ]
+        },
+    }
+}
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+

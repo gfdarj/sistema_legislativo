@@ -62,8 +62,12 @@ class AutorForm(forms.ModelForm):
         }
 
 
-
 class TramitacaoForm(forms.ModelForm):
+    existe_parecer_vencido = forms.BooleanField(
+        required=False,
+        label="Existe parecer vencido?"
+    )
+
     class Meta:
         model = Tramitacao
         fields = [
@@ -72,33 +76,61 @@ class TramitacaoForm(forms.ModelForm):
             "data_evento",
             "descricao",
             "observacao",
+
+            "parecer",
+            "texto_parecer",
+            "data_parecer",
+
+            "parecer_vencido",
+            "texto_parecer_vencido",
+            "data_parecer_vencido",
+
+            "data_publicacao_parecer",
         ]
+
         widgets = {
-            "comissao": forms.Select(
-                attrs={
-                    "class": "form-select",
-                    "readonly": "readonly"
-                    # "disabled": "disabled"  # 👈 desabilita visualmente
-                }
-            ),
+            "comissao": forms.Select(attrs={"class": "form-select", "readonly": "readonly"}),
             "relator": forms.Select(attrs={"class": "form-select"}),
-            "data_evento": forms.DateInput(
-                attrs={"type": "date", "class": "form-control"}
-            ),
+            "data_evento": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "descricao": forms.TextInput(attrs={"class": "form-control"}),
-            "observacao": forms.Textarea(
-                attrs={"class": "form-control", "rows": 3}
-            ),
+            "observacao": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+
+            "parecer": forms.TextInput(attrs={"class": "form-control"}),
+            #"texto_parecer": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+            "data_parecer": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+
+            "parecer_vencido": forms.TextInput(attrs={"class": "form-control"}),
+            #"texto_parecer_vencido": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+            "data_parecer_vencido": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+
+            "data_publicacao_parecer": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
         }
 
     def __init__(self, *args, **kwargs):
-        # 🔑 remove o argumento extra ANTES do super()
         self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
-        # ✔ SOMENTE NA CRIAÇÃO
+        # Se já existe parecer vencido, marca o checkbox
+        if (
+            self.instance.parecer_vencido
+            or self.instance.texto_parecer_vencido
+            or self.instance.data_parecer_vencido
+        ):
+            self.fields["existe_parecer_vencido"].initial = True
+
         if not self.instance.pk:
             self.fields["data_evento"].initial = localdate()
+
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if not cleaned_data.get("existe_parecer_vencido"):
+            cleaned_data["parecer_vencido"] = None
+            cleaned_data["texto_parecer_vencido"] = ""
+            cleaned_data["data_parecer_vencido"] = None
+
+        return cleaned_data
 
 
 
