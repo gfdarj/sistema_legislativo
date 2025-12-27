@@ -147,7 +147,7 @@ class Tramitacao(models.Model):
     )
     data_parecer = models.DateField(blank=True, null=True)
 
-    parecer_vencido = models.CharField(max_length=100)
+    parecer_vencido = models.CharField(max_length=100, blank=True, null=True)
     texto_parecer_vencido = CKEditor5Field(
         "Texto do Parecer Vencido",
         blank=True,

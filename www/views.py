@@ -323,15 +323,9 @@ class TramitacaoCreateView(LoginRequiredMixin, CreateView):
 
         return super().form_valid(form)
 
-
     def get_initial(self):
         initial = super().get_initial()
-
-        if self.request.method == "GET":
-            initial["comissao"] = (
-                self.request.user.perfil.comissao_padrao
-            )
-
+        initial["comissao"] = self.request.user.perfil.comissao_padrao
         return initial
 
 

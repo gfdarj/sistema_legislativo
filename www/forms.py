@@ -89,22 +89,18 @@ class TramitacaoForm(forms.ModelForm):
         ]
 
         widgets = {
-            "comissao": forms.Select(attrs={"class": "form-select", "readonly": "readonly"}),
+            "comissao": forms.Select(attrs={"class": "form-select"}),
             "relator": forms.Select(attrs={"class": "form-select"}),
             "data_evento": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "descricao": forms.TextInput(attrs={"class": "form-control"}),
             "observacao": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-
             "parecer": forms.TextInput(attrs={"class": "form-control"}),
-            #"texto_parecer": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
             "data_parecer": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-
             "parecer_vencido": forms.TextInput(attrs={"class": "form-control"}),
-            #"texto_parecer_vencido": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
             "data_parecer_vencido": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-
             "data_publicacao_parecer": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
         }
+
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)

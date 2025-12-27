@@ -3,9 +3,11 @@
 {% block content %}
 <h3>Tramitação</h3>
 
+{# 🔥 OBRIGATÓRIO: media FORA do form #}
+{{ form.media }}
+
 <form method="post">
     {% csrf_token %}
-    {{ form.media }}
 
     {% if form.non_field_errors %}
     <div class="alert alert-danger">
@@ -34,13 +36,6 @@
 
     <!-- Descrição + Data do Evento -->
     <div class="row">
-            <div class="col-md-4 mb-3">
-            <label class="form-label">Data do Evento</label>
-            {{ form.data_evento }}
-            {% if form.data_evento.errors %}
-            <div class="text-danger">{{ form.data_evento.errors }}</div>
-            {% endif %}
-        </div>
         <div class="col-md-8 mb-3">
             <label class="form-label">Descrição</label>
             {{ form.descricao }}
@@ -48,9 +43,16 @@
             <div class="text-danger">{{ form.descricao.errors }}</div>
             {% endif %}
         </div>
+
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Data do Evento</label>
+            {{ form.data_evento }}
+            {% if form.data_evento.errors %}
+            <div class="text-danger">{{ form.data_evento.errors }}</div>
+            {% endif %}
+        </div>
     </div>
 
-    <!-- Observação -->
     <div class="mb-3">
         <label class="form-label">Observação</label>
         {{ form.observacao }}
@@ -73,19 +75,21 @@
 
     <div class="mb-3">
         <label class="form-label">Texto do Parecer</label>
+        {# {{ form.texto_parecer }} #}
+        {% if form.texto_parecer.errors %}
+        <div class="text-danger">{{ form.texto_parecer.errors }}</div>
+        {% endif %}
+    </div>
+
+
+     <div class="mb-3">
+        <label class="form-label">Texto do Parecer</label>
         {{ form.texto_parecer }}
         {% if form.texto_parecer.errors %}
         <div class="text-danger">{{ form.texto_parecer.errors }}</div>
         {% endif %}
     </div>
 
-    <div class="mb-3">
-        <label class="form-label">Data do Parecer</label>
-        {{ form.data_parecer }}
-        {% if form.data_parecer.errors %}
-        <div class="text-danger">{{ form.data_parecer.errors }}</div>
-        {% endif %}
-    </div>
 
     <hr>
 
@@ -110,13 +114,15 @@
             {% endif %}
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Texto do Parecer Vencido</label>
+
+         <div class="mb-3">
+            <label class="form-label">Texto do Parecer do Vencido</label>
             {{ form.texto_parecer_vencido }}
             {% if form.texto_parecer_vencido.errors %}
             <div class="text-danger">{{ form.texto_parecer_vencido.errors }}</div>
             {% endif %}
         </div>
+
 
         <div class="mb-3">
             <label class="form-label">Data do Parecer Vencido</label>
@@ -137,7 +143,7 @@
         {% endif %}
     </div>
 
-    <button class="btn btn-primary">Salvar</button>
+    <button type="submit" class="btn btn-primary">Salvar</button>
     <a href="{% url 'tramitacao_list' proposicao.id %}" class="btn btn-secondary">Voltar</a>
 </form>
 
@@ -155,5 +161,4 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-<br>
 {% endblock %}
