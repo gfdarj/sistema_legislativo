@@ -1,5 +1,17 @@
 asgiref==3.11.0
+brotli==1.2.0
+cffi==2.0.0
+cssselect2==0.8.0
 Django==6.0
 django-ckeditor-5==0.2.18
+fonttools==4.61.1
 pillow==12.0.0
+pycparser==2.23
+pydyf==0.12.1
+pyphen==0.17.2
 sqlparse==0.5.5
+tinycss2==1.5.1
+tinyhtml5==2.0.0
+weasyprint==67.0
+webencodings==0.5.1
+zopfli==0.4.0

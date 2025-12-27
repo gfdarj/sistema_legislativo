@@ -74,7 +74,6 @@ class TramitacaoForm(forms.ModelForm):
             "comissao",
             "relator",
             "data_evento",
-            "descricao",
             "observacao",
 
             "parecer",
@@ -92,8 +91,7 @@ class TramitacaoForm(forms.ModelForm):
             "comissao": forms.Select(attrs={"class": "form-select"}),
             "relator": forms.Select(attrs={"class": "form-select"}),
             "data_evento": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "descricao": forms.TextInput(attrs={"class": "form-control"}),
-            "observacao": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "observacao": forms.Textarea(attrs={"class": "form-control", "rows": 1}),
             "parecer": forms.TextInput(attrs={"class": "form-control"}),
             "data_parecer": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "parecer_vencido": forms.TextInput(attrs={"class": "form-control"}),

@@ -8,7 +8,7 @@
 <ul class="list-group">
 {% for t in object.tramitacoes.all %}
     <li class="list-group-item">
-        {{ t.data_evento|date:"d/m/Y" }} - {{ t.descricao }}
+        {{ t.data_evento|date:"d/m/Y" }} - {{ t.parecer }}
     </li>
 {% empty %}
     <li class="list-group-item text-muted">Sem tramitação</li>

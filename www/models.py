@@ -135,8 +135,7 @@ class Tramitacao(models.Model):
     )
 
     data_evento = models.DateField()
-    descricao = models.CharField(max_length=255)
-    observacao = models.TextField(blank=True, null=True)
+    observacao = models.TextField(max_length=2000, blank=True, null=True)
 
     parecer = models.CharField(max_length=100, blank=True, null=True)
     texto_parecer = CKEditor5Field(

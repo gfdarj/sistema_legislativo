@@ -1,8 +1,12 @@
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, TemplateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.db import models
+from django.template.loader import render_to_string
+from weasyprint import HTML
+from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from datetime import timedelta
 from www.models import Proposicao, Autor, TipoProposicao, Comissao, Tramitacao
@@ -444,6 +448,30 @@ class TramitacaoDeleteView(LoginRequiredMixin, DeleteView):
             "tramitacao_list",
             kwargs={"proposicao_id": self.proposicao.id}
         )
+
+
+class TramitacaoPDFView(LoginRequiredMixin, View):
+    """
+    Gera o PDF do parecer da tramitação
+    """
+
+    def get(self, request, pk, *args, **kwargs):
+        tramitacao = get_object_or_404(Tramitacao, pk=pk)
+
+        html_string = render_to_string(
+            "www/tramitacao_pdf.html",
+            {"tramitacao": tramitacao}
+        )
+
+        pdf = HTML(string=html_string).write_pdf()
+
+        response = HttpResponse(pdf, content_type="application/pdf")
+        response["Content-Disposition"] = (
+            f'inline; filename="parecer_tramitacao_{pk}.pdf"'
+        )
+
+        return response
+
 
 ###################################################################################
 

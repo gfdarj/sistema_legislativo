@@ -130,10 +130,19 @@ CKEDITOR_5_CONFIGS = {
             "|",
             "bold", "italic", "underline", "strikethrough",
             "|",
+            "alignment",
+            "|",
             "bulletedList", "numberedList",
             "|",
+            "outdent", "indent",
+            "|",
             "blockQuote",
+            "|",
+            "insertTable",
+            "|",
             "link",
+            "|",
+            "showBlocks",   # 👈 MARCA DE PARÁGRAFO (¶)
             "|",
             "undo", "redo",
         ],
@@ -144,6 +153,16 @@ CKEDITOR_5_CONFIGS = {
                 {"model": "heading2", "view": "h2", "title": "Título 2"},
                 {"model": "heading3", "view": "h3", "title": "Título 3"},
             ]
+        },
+        "table": {
+            "contentToolbar": [
+                "tableColumn",
+                "tableRow",
+                "mergeTableCells",
+            ]
+        },
+        "alignment": {
+            "options": ["left", "center", "right", "justify"]
         },
     }
 }

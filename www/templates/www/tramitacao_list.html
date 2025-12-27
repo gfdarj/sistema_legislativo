@@ -33,7 +33,7 @@
             <td>{{ t.data_evento|date:"d/m/Y" }}</td>
             <td>{{ t.comissao }}</td>
             <td>{{ t.relator|default:"—" }}</td>
-            <td>{{ t.descricao }}</td>
+            <td>{{ t.observacao }}</td>
             <td>
                 <a href="{% url 'tramitacao_update' proposicao.id t.id %}">
                     Editar

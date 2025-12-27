@@ -17,6 +17,7 @@ urlpatterns = [
     path("proposicao/<int:proposicao_id>/tramitacoes/nova/", TramitacaoCreateView.as_view(), name="tramitacao_create"),
     path("proposicao/<int:proposicao_id>/tramitacoes/<int:t>/editar/", TramitacaoUpdateView.as_view(), name="tramitacao_update"),
     path("proposicao/<int:proposicao_id>/tramitacoes/<int:t>/excluir/", TramitacaoDeleteView.as_view(), name="tramitacao_delete"),
+    path("tramitacao/<int:pk>/pdf/", TramitacaoPDFView.as_view(), name="tramitacao_pdf"),
 
 
     path("autores/", AutorListView.as_view(), name="autor_list"),

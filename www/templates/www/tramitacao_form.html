@@ -36,13 +36,6 @@
 
     <!-- Descrição + Data do Evento -->
     <div class="row">
-        <div class="col-md-8 mb-3">
-            <label class="form-label">Descrição</label>
-            {{ form.descricao }}
-            {% if form.descricao.errors %}
-            <div class="text-danger">{{ form.descricao.errors }}</div>
-            {% endif %}
-        </div>
 
         <div class="col-md-4 mb-3">
             <label class="form-label">Data do Evento</label>
@@ -51,14 +44,13 @@
             <div class="text-danger">{{ form.data_evento.errors }}</div>
             {% endif %}
         </div>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Observação</label>
-        {{ form.observacao }}
-        {% if form.observacao.errors %}
-        <div class="text-danger">{{ form.observacao.errors }}</div>
-        {% endif %}
+        <div class=col-md-8 mb-3">
+            <label class="form-label">Observação</label>
+            {{ form.observacao }}
+            {% if form.observacao.errors %}
+            <div class="text-danger">{{ form.observacao.errors }}</div>
+            {% endif %}
+        </div>
     </div>
 
     <hr>
@@ -66,18 +58,10 @@
     <h5>Parecer</h5>
 
     <div class="mb-3">
-        <label class="form-label">Parecer</label>
+        <label class="form-label">Tipo do Parecer</label>
         {{ form.parecer }}
         {% if form.parecer.errors %}
         <div class="text-danger">{{ form.parecer.errors }}</div>
-        {% endif %}
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Texto do Parecer</label>
-        {# {{ form.texto_parecer }} #}
-        {% if form.texto_parecer.errors %}
-        <div class="text-danger">{{ form.texto_parecer.errors }}</div>
         {% endif %}
     </div>
 
@@ -104,7 +88,7 @@
     </div>
 
     <div id="bloco-parecer-vencido" style="display: none;">
-        <h5>Parecer Vencido</h5>
+        <h5>VOTO EM SEPARADO</h5>
 
         <div class="mb-3">
             <label class="form-label">Parecer Vencido</label>
@@ -145,7 +129,17 @@
 
     <button type="submit" class="btn btn-primary">Salvar</button>
     <a href="{% url 'tramitacao_list' proposicao.id %}" class="btn btn-secondary">Voltar</a>
+
+    {% if tramitacao and tramitacao.id %}
+    <a href="{% url 'tramitacao_pdf' tramitacao.id %}"
+       class="btn btn-outline-danger"
+       target="_blank">
+        📄 Exportar PDF
+    </a>
+    {% endif %}
 </form>
+
+<Br>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
