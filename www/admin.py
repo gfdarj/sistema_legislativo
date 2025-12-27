@@ -15,9 +15,9 @@ class PerfilUsuarioAdmin(admin.ModelAdmin):
 
 @admin.register(TipoProposicao)
 class TipoProposicaoAdmin(admin.ModelAdmin):
-    list_display = ("chave", "nome", "ativo")
+    list_display = ("sigla", "nome", "ativo")
     list_filter = ("ativo",)
-    search_fields = ("chave", "nome")
+    search_fields = ("sigla", "nome")
     ordering = ("nome",)
 
 

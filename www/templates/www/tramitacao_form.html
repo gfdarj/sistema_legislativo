@@ -1,19 +1,64 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h4>
-    Nova Tramitação –
-    {{ view.kwargs.projeto_id }}
-</h4>
+<h3 class="mb-4">Nova Tramitação</h3>
 
-<form method="post">
+    {% if form.errors %}
+<div class="alert alert-danger">
+    <strong>Erros no formulário:</strong>
+    <ul class="mb-0">
+        {% for field, errors in form.errors.items %}
+            <li>{{ field }}: {{ errors|join:", " }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<form method="post" class="card p-4 shadow-sm">
     {% csrf_token %}
-    {{ form.as_p }}
 
-    <button class="btn btn-primary">Salvar</button>
-    <a href="{% url 'projeto_tramitacao_list' view.kwargs.projeto_id %}"
-       class="btn btn-secondary">
-        Voltar
-    </a>
+    <!-- Linha 1 -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Comissão</label>
+            {{ form.comissao }}
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Relator</label>
+            {{ form.relator }}
+        </div>
+    </div>
+
+    <!-- Linha 2 -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Data da Tramitação</label>
+            {{ form.data_evento }}
+        </div>
+
+        <div class="col-md-8">
+            <label class="form-label">Descrição</label>
+            {{ form.descricao }}
+        </div>
+    </div>
+
+    <!-- Linha 3 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <label class="form-label">Observações</label>
+            {{ form.observacao }}
+        </div>
+    </div>
+
+    <!-- Botões -->
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'tramitacao_list' proposicao.id %}" class="btn btn-secondary">
+            Cancelar
+        </a>
+        <button type="submit" class="btn btn-primary">
+            Salvar Tramitação
+        </button>
+    </div>
 </form>
 {% endblock %}

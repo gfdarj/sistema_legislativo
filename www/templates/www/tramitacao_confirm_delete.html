@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mb-3">Excluir Tramitação</h3>
+
+<p>
+    Confirma a exclusão da tramitação de
+    <strong>{{ object.data_evento|date:"d/m/Y" }}</strong>
+    da comissão <strong>{{ object.comissao }}</strong>?
+</p>
+
+<form method="post">
+    {% csrf_token %}
+    <a href="{% url 'tramitacao_list' object.proposicao.id %}"
+       class="btn btn-secondary">
+        Cancelar
+    </a>
+    <button type="submit" class="btn btn-danger">
+        Confirmar Exclusão
+    </button>
+</form>
+{% endblock %}

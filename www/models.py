@@ -17,7 +17,7 @@ def criar_perfil_usuario(sender, instance, created, **kwargs):
 
 
 class TipoProposicao(models.Model):
-    chave = models.CharField(
+    sigla = models.CharField(
         max_length=10,
         unique=True,
         help_text="Código curto do tipo de proposição (até 10 caracteres)"
@@ -80,21 +80,6 @@ class Proposicao(models.Model):
 
     autores = models.ManyToManyField(Autor, related_name="proposicoes_autoria")
 
-    relator = models.ForeignKey(
-        Autor,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="relatorias"
-    )
-
-    comissao_atual = models.ForeignKey(
-        Comissao,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -105,6 +90,21 @@ class Proposicao(models.Model):
 
     def __str__(self):
         return f"{self.tipo} {self.numero}"
+
+    # =========================
+    # 🔹 ESTADO DERIVADO
+    # =========================
+
+    @property
+    def comissao_atual(self):
+        ultima = self.tramitacoes.order_by("-data_evento").first()
+        return ultima.comissao if ultima else None
+
+    @property
+    def relator_atual(self):
+        ultima = self.tramitacoes.order_by("-data_evento").first()
+        return ultima.relator if ultima else None
+
 
 
 class Parecer(models.Model):
@@ -134,7 +134,7 @@ class Parecer(models.Model):
 
 
 class Tramitacao(models.Model):
-    projeto = models.ForeignKey(
+    proposicao = models.ForeignKey(
         Proposicao,
         on_delete=models.CASCADE,
         related_name="tramitacoes"
@@ -142,20 +142,30 @@ class Tramitacao(models.Model):
 
     comissao = models.ForeignKey(
         Comissao,
+        on_delete=models.PROTECT
+    )
+
+    relator = models.ForeignKey(
+        Autor,
         on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
+        related_name="relatorias"
     )
 
     data_evento = models.DateField()
     descricao = models.CharField(max_length=255)
     observacao = models.TextField(blank=True, null=True)
 
+
     class Meta:
         ordering = ["data_evento"]
 
     def __str__(self):
-        return f"{self.projeto} - {self.data_evento}"
+        return (
+            f"{self.proposicao} - {self.comissao} "
+            f"({self.data_evento})"
+        )
 
 
 

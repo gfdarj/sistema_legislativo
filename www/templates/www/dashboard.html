@@ -1,42 +1,51 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h3>Dashboard Legislativo</h3>
+<h3 class="mb-4">
+    Dashboard
+    {% if comissao %}
+        – {{ comissao.nome }}
+    {% endif %}
+</h3>
 
-<h5 class="mt-4">Proposições por Tipo</h5>
-<table class="table table-bordered table-sm">
-    <tr>
-        <th>Tipo</th>
-        <th>Total</th>
-    </tr>
-    {% for t in proposicoes_por_tipo %}
-    <tr>
-        <td>{{ t.tipo__nome }}</td>
-        <td>{{ t.total }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<div class="row g-3">
 
-<h5 class="mt-4">Aguardando Parecer (por Tipo)</h5>
-<table class="table table-bordered table-sm">
-    <tr>
-        <th>Tipo</th>
-        <th>Total</th>
-    </tr>
-    {% for a in aguardando_parecer_por_tipo %}
-    <tr>
-        <td>{{ a.tipo__nome }}</td>
-        <td>{{ a.total }}</td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="2" class="text-muted">Nenhuma aguardando parecer</td>
-    </tr>
-    {% endfor %}
-</table>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>Total na Comissão</h6>
+                <h2>{{ total_na_comissao }}</h2>
+            </div>
+        </div>
+    </div>
 
-<h5 class="mt-4">Tempo médio de tramitação</h5>
-<p>
-    <strong>{{ tempo_medio_tramitacao }}</strong> dias
-</p>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>Aguardando Parecer</h6>
+                <h2>{{ aguardando_parecer }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>Entradas (30 dias)</h6>
+                <h2>{{ entradas_periodo }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>Tempo Médio (dias)</h6>
+                <h2>{{ tempo_medio }}</h2>
+            </div>
+        </div>
+    </div>
+
+</div>
+
 {% endblock %}

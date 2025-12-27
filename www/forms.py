@@ -1,6 +1,8 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.timezone import localdate
 from www.models import Proposicao, Tramitacao, Autor
+
 
 class ProposicaoForm(forms.ModelForm):
 
@@ -29,7 +31,6 @@ class ProposicaoForm(forms.ModelForm):
                 )
             except:
                 pass
-
 
 
     def clean(self):
@@ -65,9 +66,39 @@ class AutorForm(forms.ModelForm):
 class TramitacaoForm(forms.ModelForm):
     class Meta:
         model = Tramitacao
-        fields = ["data_evento", "comissao", "descricao"]
+        fields = [
+            "comissao",
+            "relator",
+            "data_evento",
+            "descricao",
+            "observacao",
+        ]
         widgets = {
-            "data_evento": forms.DateInput(attrs={"type": "date"}),
-            "descricao": forms.Textarea(attrs={"rows": 3}),
+            "comissao": forms.Select(
+                attrs={
+                    "class": "form-select",
+                    "readonly": "readonly"
+                    # "disabled": "disabled"  # 👈 desabilita visualmente
+                }
+            ),
+            "relator": forms.Select(attrs={"class": "form-select"}),
+            "data_evento": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"}
+            ),
+            "descricao": forms.TextInput(attrs={"class": "form-control"}),
+            "observacao": forms.Textarea(
+                attrs={"class": "form-control", "rows": 3}
+            ),
         }
+
+    def __init__(self, *args, **kwargs):
+        # 🔑 remove o argumento extra ANTES do super()
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+        # ✔ SOMENTE NA CRIAÇÃO
+        if not self.instance.pk:
+            self.fields["data_evento"].initial = localdate()
+
+
 
