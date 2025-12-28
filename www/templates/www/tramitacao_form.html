@@ -39,9 +39,9 @@
 
         <div class="col-md-4 mb-3">
             <label class="form-label">Data do Evento</label>
-            {{ form.data_evento }}
-            {% if form.data_evento.errors %}
-            <div class="text-danger">{{ form.data_evento.errors }}</div>
+            {{ form.data_entrada }}
+            {% if form.data_entrada.errors %}
+            <div class="text-danger">{{ form.data_entrada.errors }}</div>
             {% endif %}
         </div>
         <div class=col-md-8 mb-3">
@@ -110,9 +110,9 @@
 
         <div class="mb-3">
             <label class="form-label">Data do Parecer Vencido</label>
-            {{ form.data_parecer_vencido }}
-            {% if form.data_parecer_vencido.errors %}
-            <div class="text-danger">{{ form.data_parecer_vencido.errors }}</div>
+            {{ form.data_devolucao_relatoria_vencido }}
+            {% if form.data_devolucao_relatoria_vencido.errors %}
+            <div class="text-danger">{{ form.data_devolucao_relatoria_vencido.errors }}</div>
             {% endif %}
         </div>
     </div>

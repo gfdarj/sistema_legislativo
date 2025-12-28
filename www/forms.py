@@ -73,16 +73,16 @@ class TramitacaoForm(forms.ModelForm):
         fields = [
             "comissao",
             "relator",
-            "data_evento",
+            "data_entrada",
             "observacao",
 
             "parecer",
             "texto_parecer",
-            "data_parecer",
+            "data_devolucao_relatoria",
 
             "parecer_vencido",
             "texto_parecer_vencido",
-            "data_parecer_vencido",
+            "data_devolucao_relatoria_vencido",
 
             "data_publicacao_parecer",
         ]
@@ -90,12 +90,12 @@ class TramitacaoForm(forms.ModelForm):
         widgets = {
             "comissao": forms.Select(attrs={"class": "form-select"}),
             "relator": forms.Select(attrs={"class": "form-select"}),
-            "data_evento": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "data_entrada": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "observacao": forms.Textarea(attrs={"class": "form-control", "rows": 1}),
             "parecer": forms.TextInput(attrs={"class": "form-control"}),
-            "data_parecer": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "data_devolucao_relatoria": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "parecer_vencido": forms.TextInput(attrs={"class": "form-control"}),
-            "data_parecer_vencido": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "data_devolucao_relatoria_vencido": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "data_publicacao_parecer": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
         }
 
@@ -108,12 +108,12 @@ class TramitacaoForm(forms.ModelForm):
         if (
             self.instance.parecer_vencido
             or self.instance.texto_parecer_vencido
-            or self.instance.data_parecer_vencido
+            or self.instance.data_devolucao_relatoria_vencido
         ):
             self.fields["existe_parecer_vencido"].initial = True
 
         if not self.instance.pk:
-            self.fields["data_evento"].initial = localdate()
+            self.fields["data_entrada"].initial = localdate()
 
 
     def clean(self):
@@ -122,7 +122,7 @@ class TramitacaoForm(forms.ModelForm):
         if not cleaned_data.get("existe_parecer_vencido"):
             cleaned_data["parecer_vencido"] = None
             cleaned_data["texto_parecer_vencido"] = ""
-            cleaned_data["data_parecer_vencido"] = None
+            cleaned_data["data_devolucao_relatoria_vencido"] = None
 
         return cleaned_data
 

@@ -30,7 +30,7 @@
     <tbody>
         {% for t in tramitacoes %}
         <tr>
-            <td>{{ t.data_evento|date:"d/m/Y" }}</td>
+            <td>{{ t.data_entrada|date:"d/m/Y" }}</td>
             <td>{{ t.comissao }}</td>
             <td>{{ t.relator|default:"—" }}</td>
             <td>{{ t.observacao }}</td>

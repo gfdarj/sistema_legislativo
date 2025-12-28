@@ -24,7 +24,7 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
         qs = (
             Proposicao.objects
             .annotate(
-                ultima_data=models.Max("tramitacoes__data_evento")
+                ultima_data=models.Max("tramitacoes__data_entrada")
             )
             .prefetch_related("autores", "tramitacoes")
             .select_related("tipo")
@@ -37,7 +37,7 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
             try:
                 comissao_usuario = user.perfil.comissao_padrao
                 qs = qs.filter(
-                    tramitacoes__data_evento=models.F("ultima_data"),
+                    tramitacoes__data_entrada=models.F("ultima_data"),
                     tramitacoes__comissao=comissao_usuario,
                 )
             except:
@@ -110,7 +110,7 @@ class ProposicaoUpdateView(LoginRequiredMixin, UpdateView):
             return obj
 
         try:
-            ultima = obj.tramitacoes.order_by("-data_evento").first()
+            ultima = obj.tramitacoes.order_by("-data_entrada").first()
             if not ultima or ultima.comissao != user.perfil.comissao_padrao:
                 raise Http404("Acesso negado")
         except:
@@ -139,13 +139,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         proposicoes = (
             Proposicao.objects
             .annotate(
-                ultima_data=models.Max("tramitacoes__data_evento")
+                ultima_data=models.Max("tramitacoes__data_entrada")
             )
         )
 
         if comissao:
             proposicoes = proposicoes.filter(
-                tramitacoes__data_evento=models.F("ultima_data"),
+                tramitacoes__data_entrada=models.F("ultima_data"),
                 tramitacoes__comissao=comissao
             )
 
@@ -154,7 +154,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         # 2️⃣ Aguardando parecer (relator null na última tramitação)
         aguardando_parecer = proposicoes.filter(
-            tramitacoes__data_evento=models.F("ultima_data"),
+            tramitacoes__data_entrada=models.F("ultima_data"),
             tramitacoes__relator__isnull=True
         ).count()
 
@@ -162,7 +162,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         data_inicio = now().date() - timedelta(days=30)
 
         entradas_periodo = Tramitacao.objects.filter(
-            data_evento__gte=data_inicio,
+            data_entrada__gte=data_inicio,
             comissao=comissao if comissao else models.F("comissao")
         ).count()
 
@@ -174,7 +174,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             )
             .annotate(
                 dias=models.ExpressionWrapper(
-                    now().date() - models.F("data_evento"),
+                    now().date() - models.F("data_entrada"),
                     output_field=models.DurationField()
                 )
             )
@@ -274,7 +274,7 @@ class TramitacaoListView(LoginRequiredMixin, ListView):
         if not user.is_superuser:
             try:
                 ultima = proposicao.tramitacoes.order_by(
-                    "-data_evento"
+                    "-data_entrada"
                 ).first()
 
                 if not ultima or ultima.comissao != user.perfil.comissao_padrao:
@@ -286,7 +286,7 @@ class TramitacaoListView(LoginRequiredMixin, ListView):
             Tramitacao.objects
             .filter(proposicao=proposicao)
             .select_related("comissao", "relator")
-            .order_by("data_evento")
+            .order_by("data_entrada")
         )
 
     def get_context_data(self, **kwargs):

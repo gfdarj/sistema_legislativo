@@ -82,8 +82,8 @@ class Proposicao(models.Model):
     )
     numero = models.CharField(max_length=20)
     ementa = models.TextField()
-
     autores = models.ManyToManyField(Autor, related_name="proposicoes_autoria")
+    link_proposicao = models.CharField(max_length=400, blank=True, null=True)
 
     class Meta:
         constraints = [
@@ -102,12 +102,12 @@ class Proposicao(models.Model):
 
     @property
     def comissao_atual(self):
-        ultima = self.tramitacoes.order_by("-data_evento").first()
+        ultima = self.tramitacoes.order_by("-data_entrada").first()
         return ultima.comissao if ultima else None
 
     @property
     def relator_atual(self):
-        ultima = self.tramitacoes.order_by("-data_evento").first()
+        ultima = self.tramitacoes.order_by("-data_entrada").first()
         return ultima.relator if ultima else None
 
 
@@ -126,6 +126,8 @@ class Tramitacao(models.Model):
         on_delete=models.PROTECT
     )
 
+    data_entrada = models.DateField()
+
     relator = models.ForeignKey(
         Autor,
         on_delete=models.SET_NULL,
@@ -133,8 +135,11 @@ class Tramitacao(models.Model):
         blank=True,
         related_name="relatorias"
     )
+    data_relatoria = models.DateField(blank=True, null=True)
 
-    data_evento = models.DateField()
+    reuniao = models.CharField(max_length=100, blank=True, null=True)
+    data_reuniao = models.DateField(blank=True, null=True)
+
     observacao = models.TextField(max_length=2000, blank=True, null=True)
 
     parecer = models.CharField(max_length=100, blank=True, null=True)
@@ -144,7 +149,7 @@ class Tramitacao(models.Model):
         null=True,
         config_name="default"
     )
-    data_parecer = models.DateField(blank=True, null=True)
+    data_devolucao_relatoria = models.DateField(blank=True, null=True)
 
     parecer_vencido = models.CharField(max_length=100, blank=True, null=True)
     texto_parecer_vencido = CKEditor5Field(
@@ -153,17 +158,18 @@ class Tramitacao(models.Model):
         null=True,
         config_name="default"
     )
-    data_parecer_vencido = models.DateField(blank=True, null=True)
-
+    data_devolucao_relatoria_vencido = models.DateField(blank=True, null=True)
     data_publicacao_parecer = models.DateField(blank=True, null=True)
 
+    data_saida_comissao = models.DateField(blank=True, null=True)
+
     class Meta:
-        ordering = ["data_evento"]
+        ordering = ["data_entrada"]
 
     def __str__(self):
         return (
             f"{self.proposicao} - {self.comissao} "
-            f"({self.data_evento})"
+            f"({self.data_entrada})"
         )
 
 
