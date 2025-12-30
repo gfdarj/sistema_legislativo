@@ -6,15 +6,17 @@
 <form method="post">
     {% csrf_token %}
 
-    <div class="mb-3">
-        <label class="form-label">Tipo</label>
-        {{ form.tipo }}
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Tipo</label>
+            {{ form.tipo }}
+        </div>
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Número</label>
+            {{ form.numero_formatado }}
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label class="form-label">Número</label>
-        {{ form.numero }}
-    </div>
 
     <div class="mb-3">
         <label class="form-label">Autores</label>
@@ -24,6 +26,11 @@
     <div class="mb-3">
         <label class="form-label">Ementa</label>
         {{ form.ementa }}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Link da Proposição</label>
+        {{ form.link_proposicao }}
     </div>
 
     <button class="btn btn-primary">Salvar</button>

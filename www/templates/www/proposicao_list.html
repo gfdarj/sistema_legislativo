@@ -48,12 +48,24 @@
     <div class="col-md-1">
         <button class="btn btn-primary w-100">Filtrar</button>
     </div>
+    <div class="col-md-5">
+        <select name="comissao" class="form-select">
+            <option value="">Comissão</option>
+            {% for c in comissoes %}
+                <option value="{{ c.id }}"
+                  {% if request.GET.comissao == c.id|stringformat:"s" %}selected{% endif %}>
+                    {{ c.nome }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 </form>
 
 <table class="table table-striped">
     <thead>
         <tr>
             <th>Proposição</th>
+            <th>Número</th>
             <th>Tipo</th>
             <th>Comissão Atual</th>
             <th>Relator Atual</th>
@@ -64,12 +76,13 @@
         {% for p in object_list %}
         <tr>
             <td>{{ p.numero }}</td>
+            <td>{{ p.numero_formatado }}</td>
             <td>{{ p.tipo.nome }}</td>
             <td>{{ p.comissao_atual|default:"—" }}</td>
             <td>{{ p.relator_atual|default:"—" }}</td>
             <td>
-                <a href="{% url 'proposicao_update' p.id %}">Editar</a> |
-                <a href="{% url 'tramitacao_list' p.id %}">Tramitações</a>
+                <a href="{% url 'proposicao_update' p.pk %}">Editar</a> |
+                <a href="{% url 'tramitacao_list' p.pk %}">Tramitações</a>
             </td>
         </tr>
         {% empty %}
@@ -79,5 +92,61 @@
         {% endfor %}
     </tbody>
 </table>
+
+
+{% if is_paginated %}
+<nav aria-label="Paginação">
+  <ul class="pagination justify-content-center">
+
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page=1{% if querystring %}&{{ querystring }}{% endif %}">
+          « Primeira
+        </a>
+      </li>
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">
+          ‹ Anterior
+        </a>
+      </li>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if num >= page_obj.number|add:-3 and num <= page_obj.number|add:3 %}
+        {% if page_obj.number == num %}
+          <li class="page-item active">
+            <span class="page-link">{{ num }}</span>
+          </li>
+        {% else %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}">
+              {{ num }}
+            </a>
+          </li>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">
+          Próxima ›
+        </a>
+      </li>
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ page_obj.paginator.num_pages }}{% if querystring %}&{{ querystring }}{% endif %}">
+          Última »
+        </a>
+      </li>
+    {% endif %}
+
+  </ul>
+</nav>
+{% endif %}
 
 {% endblock %}

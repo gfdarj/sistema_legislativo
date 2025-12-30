@@ -3,9 +3,6 @@
 {% block content %}
 <h3>Tramitação</h3>
 
-{# 🔥 OBRIGATÓRIO: media FORA do form #}
-{{ form.media }}
-
 <form method="post">
     {% csrf_token %}
 
@@ -15,7 +12,7 @@
     </div>
     {% endif %}
 
-    <!-- Comissão + Relator -->
+    <!-- Comissão -->
     <div class="row">
         <div class="col-md-6 mb-3">
             <label class="form-label">Comissão</label>
@@ -24,135 +21,47 @@
             <div class="text-danger">{{ form.comissao.errors }}</div>
             {% endif %}
         </div>
-
-        <div class="col-md-6 mb-3">
-            <label class="form-label">Relator</label>
-            {{ form.relator }}
-            {% if form.relator.errors %}
-            <div class="text-danger">{{ form.relator.errors }}</div>
-            {% endif %}
-        </div>
     </div>
 
-    <!-- Descrição + Data do Evento -->
+    <!-- Datas -->
     <div class="row">
-
-        <div class="col-md-4 mb-3">
-            <label class="form-label">Data do Evento</label>
+        <div class="col-md-2 mb-3">
+            <label class="form-label">Data de Entrada</label>
             {{ form.data_entrada }}
             {% if form.data_entrada.errors %}
             <div class="text-danger">{{ form.data_entrada.errors }}</div>
             {% endif %}
         </div>
-        <div class=col-md-8 mb-3">
-            <label class="form-label">Observação</label>
-            {{ form.observacao }}
-            {% if form.observacao.errors %}
-            <div class="text-danger">{{ form.observacao.errors }}</div>
+
+        <div class="col-md-2 mb-3">
+            <label class="form-label">Data de Saída</label>
+            {{ form.data_saida }}
+            {% if form.data_saida.errors %}
+            <div class="text-danger">{{ form.data_saida.errors }}</div>
             {% endif %}
         </div>
     </div>
 
-    <hr>
-
-    <h5>Parecer</h5>
-
-    <div class="mb-3">
-        <label class="form-label">Tipo do Parecer</label>
-        {{ form.parecer }}
-        {% if form.parecer.errors %}
-        <div class="text-danger">{{ form.parecer.errors }}</div>
+    <!-- Observação -->
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Observação</label>
+        {{ form.observacao }}
+        {% if form.observacao.errors %}
+        <div class="text-danger">{{ form.observacao.errors }}</div>
         {% endif %}
     </div>
 
+    <button type="submit" class="btn btn-primary">Salvar Tramitação</button>
+    <a href="{% url 'tramitacao_list' proposicao.pk %}" class="btn btn-secondary">
+        Voltar
+    </a>
 
-     <div class="mb-3">
-        <label class="form-label">Texto do Parecer</label>
-        {{ form.texto_parecer }}
-        {% if form.texto_parecer.errors %}
-        <div class="text-danger">{{ form.texto_parecer.errors }}</div>
-        {% endif %}
-    </div>
-
-
-    <hr>
-
-    <div class="mb-3 form-check">
-        {{ form.existe_parecer_vencido }}
-        <label class="form-check-label" for="{{ form.existe_parecer_vencido.id_for_label }}">
-            Existe parecer vencido?
-        </label>
-        {% if form.existe_parecer_vencido.errors %}
-        <div class="text-danger">{{ form.existe_parecer_vencido.errors }}</div>
-        {% endif %}
-    </div>
-
-    <div id="bloco-parecer-vencido" style="display: none;">
-        <h5>VOTO EM SEPARADO</h5>
-
-        <div class="mb-3">
-            <label class="form-label">Parecer Vencido</label>
-            {{ form.parecer_vencido }}
-            {% if form.parecer_vencido.errors %}
-            <div class="text-danger">{{ form.parecer_vencido.errors }}</div>
-            {% endif %}
-        </div>
-
-
-         <div class="mb-3">
-            <label class="form-label">Texto do Parecer do Vencido</label>
-            {{ form.texto_parecer_vencido }}
-            {% if form.texto_parecer_vencido.errors %}
-            <div class="text-danger">{{ form.texto_parecer_vencido.errors }}</div>
-            {% endif %}
-        </div>
-
-
-        <div class="mb-3">
-            <label class="form-label">Data do Parecer Vencido</label>
-            {{ form.data_devolucao_relatoria_vencido }}
-            {% if form.data_devolucao_relatoria_vencido.errors %}
-            <div class="text-danger">{{ form.data_devolucao_relatoria_vencido.errors }}</div>
-            {% endif %}
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="mb-3">
-        <label class="form-label">Data de Publicação do Parecer</label>
-        {{ form.data_publicacao_parecer }}
-        {% if form.data_publicacao_parecer.errors %}
-        <div class="text-danger">{{ form.data_publicacao_parecer.errors }}</div>
-        {% endif %}
-    </div>
-
-    <button type="submit" class="btn btn-primary">Salvar</button>
-    <a href="{% url 'tramitacao_list' proposicao.id %}" class="btn btn-secondary">Voltar</a>
-
-    {% if tramitacao and tramitacao.id %}
-    <a href="{% url 'tramitacao_pdf' tramitacao.id %}"
-       class="btn btn-outline-danger"
-       target="_blank">
-        📄 Exportar PDF
+    {% if tramitacao %}
+    <a href="{% url 'parecer_create' tramitacao.pk %}"
+       class="btn btn-outline-success">
+        ➕ Novo Parecer
     </a>
     {% endif %}
 </form>
-
-<Br>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const checkbox = document.getElementById("id_existe_parecer_vencido");
-    const bloco = document.getElementById("bloco-parecer-vencido");
-
-    function toggleBloco() {
-        bloco.style.display = checkbox.checked ? "block" : "none";
-    }
-
-    toggleBloco();
-    checkbox.addEventListener("change", toggleBloco);
-});
-</script>
 
 {% endblock %}

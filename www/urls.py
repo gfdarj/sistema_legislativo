@@ -10,20 +10,27 @@ urlpatterns = [
 
     path("proposicao/", ProposicaoListView.as_view(), name="proposicao_list"),
     path("proposicao/nova/", ProposicaoCreateView.as_view(), name="proposicao_create"),
-    path("proposicao/<int:pk>/editar/", ProposicaoUpdateView.as_view(), name="proposicao_update"),
+    path("proposicao/<str:pk>/editar/", ProposicaoUpdateView.as_view(), name="proposicao_update"),
 
 
     path("proposicao/<int:proposicao_id>/tramitacoes/", TramitacaoListView.as_view(), name="tramitacao_list"),
-    path("proposicao/<int:proposicao_id>/tramitacoes/nova/", TramitacaoCreateView.as_view(), name="tramitacao_create"),
+    ####path("proposicao/<int:proposicao_id>/tramitacoes/nova/", TramitacaoCreateView.as_view(), name="tramitacao_create"),
+    # 👉 TELA ÚNICA (Tramitação + Pareceres)
+    path("proposicao/<str:proposicao_id>/tramitacoes/nova/", TramitacaoComParecerCreateView.as_view(), name="tramitacao_create"),
     path("proposicao/<int:proposicao_id>/tramitacoes/<int:t>/editar/", TramitacaoUpdateView.as_view(), name="tramitacao_update"),
     path("proposicao/<int:proposicao_id>/tramitacoes/<int:t>/excluir/", TramitacaoDeleteView.as_view(), name="tramitacao_delete"),
     path("tramitacao/<int:pk>/pdf/", TramitacaoPDFView.as_view(), name="tramitacao_pdf"),
-
 
     path("autores/", AutorListView.as_view(), name="autor_list"),
     path("autores/novo/", AutorCreateView.as_view(), name="autor_create"),
     path("autores/<int:pk>/editar/", AutorUpdateView.as_view(), name="autor_update"),
     path("autores/<int:pk>/excluir/", AutorDeleteView.as_view(), name="autor_delete"),
+
+
+    path("reuniao/", ReuniaoListView.as_view(), name="reuniao_list"),
+    path("reuniao/nova/", ReuniaoCreateView.as_view(), name="reuniao_create"),
+    path("reuniao/<int:pk>/editar/", ReuniaoUpdateView.as_view(), name="reuniao_update"),
+    path("reuniao/<int:pk>/", ReuniaoDetailView.as_view(), name="reuniao_detail"),
 
 
     path("tipos/", TipoProposicaoListView.as_view(), name="tipo_list"),

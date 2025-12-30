@@ -1,0 +1,3 @@
+python manage.py loaddata comissoes
+python manage.py loaddata autores
+python manage.py loaddata tipos_proposicao

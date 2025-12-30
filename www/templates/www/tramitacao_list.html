@@ -12,7 +12,7 @@
     {{ proposicao.relator_atual|default:"—" }}
 </p>
 
-<a href="{% url 'tramitacao_create' proposicao.id %}"
+<a href="{% url 'tramitacao_create' proposicao.pk %}"
    class="btn btn-primary mb-3">
     Nova Tramitação
 </a>

@@ -1,16 +1,20 @@
 from django.http import Http404, HttpResponse
+from django.db import transaction
+from django.shortcuts import redirect, render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
+from django.db.models import Q
 from django.views.generic import ListView, DetailView, CreateView, TemplateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from django.db import models
 from django.template.loader import render_to_string
 from weasyprint import HTML
+from django.forms import modelformset_factory
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from datetime import timedelta
-from www.models import Proposicao, Autor, TipoProposicao, Comissao, Tramitacao
-from www.forms import TramitacaoForm, AutorForm, ProposicaoForm
+#-----
+from www.models import *
+from www.forms import TramitacaoForm, AutorForm, ProposicaoForm, ReuniaoForm, ParecerRelatorForm, ParecerVencidoForm
 
 
 ###################################################################################
@@ -26,13 +30,17 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
             .annotate(
                 ultima_data=models.Max("tramitacoes__data_entrada")
             )
-            .prefetch_related("autores", "tramitacoes")
             .select_related("tipo")
+            .prefetch_related(
+                "autores",
+                "tramitacoes",
+                "tramitacoes__pareceres",
+            )
         )
 
         user = self.request.user
 
-        # 🔒 RESTRIÇÃO POR COMISSÃO (BASEADA NA ÚLTIMA TRAMITAÇÃO)
+        # 🔒 Restrição por comissão (baseada na ÚLTIMA tramitação)
         if not user.is_superuser:
             try:
                 comissao_usuario = user.perfil.comissao_padrao
@@ -40,31 +48,51 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
                     tramitacoes__data_entrada=models.F("ultima_data"),
                     tramitacoes__comissao=comissao_usuario,
                 )
-            except:
+            except Exception:
                 return qs.none()
 
-        # 🔍 FILTROS DA TELA
+        # 🔍 Filtros da tela
         tipo = self.request.GET.get("tipo")
         numero = self.request.GET.get("numero")
         autor = self.request.GET.get("autor")
+        comissao_filtro = self.request.GET.get("comissao")
         aguardando_parecer = self.request.GET.get("aguardando_parecer")
 
         if tipo:
             qs = qs.filter(tipo_id=tipo)
 
         if numero:
-            qs = qs.filter(numero__icontains=numero)
+            qs = qs.filter(
+                Q(numero__icontains=numero) |
+                Q(numero_formatado__icontains=numero)
+            )
 
         if autor:
             qs = qs.filter(autores__id=autor)
 
+        if comissao_filtro:
+            qs = qs.filter(
+                tramitacoes__data_entrada=models.F("ultima_data"),
+                tramitacoes__comissao_id=comissao_filtro
+            )
+
+        # 🟡 Aguardando parecer do relator (NOVA REGRA CORRETA)
         if aguardando_parecer == "1":
-            qs = qs.filter(pareceres__isnull=True)
+            qs = (
+                qs
+                .exclude(tramitacoes__pareceres__tipo="RELATOR")
+            )
 
         return qs.distinct()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        params = self.request.GET.copy()
+        params.pop("page", None)
+
+        context["querystring"] = params.urlencode()
+
         context["tipos"] = TipoProposicao.objects.filter(ativo=True)
         context["autores"] = Autor.objects.filter(ativo=True).order_by("nome")
 
@@ -135,7 +163,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         else:
             comissao = user.perfil.comissao_padrao
 
-        # Base: proposições com última tramitação
+        # 🔹 Proposições com data da última tramitação
         proposicoes = (
             Proposicao.objects
             .annotate(
@@ -143,6 +171,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             )
         )
 
+        # 🔹 Filtra apenas a última tramitação da comissão
         if comissao:
             proposicoes = proposicoes.filter(
                 tramitacoes__data_entrada=models.F("ultima_data"),
@@ -150,40 +179,54 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             )
 
         # 1️⃣ Total na comissão
-        total_na_comissao = proposicoes.count()
+        total_na_comissao = proposicoes.distinct().count()
 
-        # 2️⃣ Aguardando parecer (relator null na última tramitação)
-        aguardando_parecer = proposicoes.filter(
-            tramitacoes__data_entrada=models.F("ultima_data"),
-            tramitacoes__relator__isnull=True
-        ).count()
+        # 2️⃣ Aguardando parecer do relator
+        #
+        # Regra:
+        # - última tramitação na comissão
+        # - NÃO existe parecer do tipo RELATOR nessa tramitação
+        aguardando_parecer = (
+            proposicoes
+            .exclude(
+                tramitacoes__pareceres__tipo="RELATOR"
+            )
+            .distinct()
+            .count()
+        )
 
         # 3️⃣ Entradas no período (últimos 30 dias)
         data_inicio = now().date() - timedelta(days=30)
 
-        entradas_periodo = Tramitacao.objects.filter(
-            data_entrada__gte=data_inicio,
-            comissao=comissao if comissao else models.F("comissao")
-        ).count()
-
-        # 4️⃣ Tempo médio na comissão (dias)
-        tempos = (
+        entradas_periodo = (
             Tramitacao.objects
             .filter(
-                comissao=comissao if comissao else models.F("comissao")
-            )
-            .annotate(
-                dias=models.ExpressionWrapper(
-                    now().date() - models.F("data_entrada"),
-                    output_field=models.DurationField()
-                )
+                data_entrada__gte=data_inicio
             )
         )
 
-        if tempos.exists():
-            tempo_medio = sum(
-                t.dias.days for t in tempos
-            ) / tempos.count()
+        if comissao:
+            entradas_periodo = entradas_periodo.filter(comissao=comissao)
+
+        entradas_periodo = entradas_periodo.count()
+
+        # 4️⃣ Tempo médio na comissão (dias)
+        tramitacoes = Tramitacao.objects.all()
+
+        if comissao:
+            tramitacoes = tramitacoes.filter(comissao=comissao)
+
+        tramitacoes = tramitacoes.annotate(
+            dias=models.ExpressionWrapper(
+                now().date() - models.F("data_entrada"),
+                output_field=models.DurationField()
+            )
+        )
+
+        if tramitacoes.exists():
+            tempo_medio = (
+                sum(t.dias.days for t in tramitacoes) / tramitacoes.count()
+            )
         else:
             tempo_medio = 0
 
@@ -196,7 +239,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         })
 
         return context
-
 
 ###################################################################################
 
@@ -264,38 +306,114 @@ class TramitacaoListView(LoginRequiredMixin, ListView):
         proposicao_id = self.kwargs["proposicao_id"]
 
         try:
-            proposicao = Proposicao.objects.get(pk=proposicao_id)
+            self.proposicao = Proposicao.objects.get(pk=proposicao_id)
         except Proposicao.DoesNotExist:
             raise Http404("Proposição não encontrada")
 
         user = self.request.user
 
-        # 🔒 RESTRIÇÃO POR COMISSÃO
+        # 🔒 Restrição por comissão (baseada na ÚLTIMA tramitação)
         if not user.is_superuser:
-            try:
-                ultima = proposicao.tramitacoes.order_by(
-                    "-data_entrada"
-                ).first()
+            ultima = (
+                self.proposicao.tramitacoes
+                .order_by("-data_entrada")
+                .first()
+            )
 
-                if not ultima or ultima.comissao != user.perfil.comissao_padrao:
-                    raise Http404("Acesso negado")
-            except:
+            if (
+                not ultima or
+                ultima.comissao != user.perfil.comissao_padrao
+            ):
                 raise Http404("Acesso negado")
 
         return (
             Tramitacao.objects
-            .filter(proposicao=proposicao)
-            .select_related("comissao", "relator")
+            .filter(proposicao=self.proposicao)
+            .select_related(
+                "proposicao",
+                "comissao",
+            )
+            .prefetch_related(
+                "pareceres",
+                "pareceres__relator",
+                "pareceres__reuniao",
+            )
             .order_by("data_entrada")
         )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["proposicao"] = Proposicao.objects.get(
-            pk=self.kwargs["proposicao_id"]
-        )
+        context["proposicao"] = self.proposicao
         return context
 
+
+# View ÚNICA Tramitacao - Parecer - Parecer vencido
+class TramitacaoComParecerCreateView(View):
+    template_name = "www/tramitacao_unica_form.html"
+
+    ParecerVencidoFormSet = modelformset_factory(
+        Parecer,
+        form=ParecerVencidoForm,
+        extra=1,
+        can_delete=True
+    )
+
+    def get(self, request, proposicao_id):
+        proposicao = get_object_or_404(Proposicao, pk=proposicao_id)
+
+        context = {
+            "proposicao": proposicao,
+            "tramitacao_form": TramitacaoForm(),
+            "parecer_relator_form": ParecerRelatorForm(),
+            "vencidos_formset": self.ParecerVencidoFormSet(
+                queryset=Parecer.objects.none(),
+                prefix="vencido"
+            ),
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, proposicao_id):
+        proposicao = get_object_or_404(Proposicao, pk=proposicao_id)
+
+        tramitacao_form = TramitacaoForm(request.POST)
+        parecer_relator_form = ParecerRelatorForm(request.POST)
+        vencidos_formset = ParecerVencidoFormSet(
+            request.POST,
+            queryset=Parecer.objects.none(),
+            prefix="vencido"
+        )
+
+        forms_valid = (
+            tramitacao_form.is_valid()
+            and parecer_relator_form.is_valid()
+            and vencidos_formset.is_valid()
+        )
+
+        if forms_valid:
+            with transaction.atomic():
+                tramitacao = tramitacao_form.save(commit=False)
+                tramitacao.proposicao = proposicao
+                tramitacao.save()
+
+                parecer_relator = parecer_relator_form.save(commit=False)
+                parecer_relator.tramitacao = tramitacao
+                parecer_relator.save()
+
+                for form in vencidos_formset:
+                    if form.cleaned_data and not form.cleaned_data.get("DELETE"):
+                        parecer = form.save(commit=False)
+                        parecer.tramitacao = tramitacao
+                        parecer.save()
+
+            return redirect("tramitacao_list", proposicao.pk)
+
+        context = {
+            "proposicao": proposicao,
+            "tramitacao_form": tramitacao_form,
+            "parecer_relator_form": parecer_relator_form,
+            "vencidos_formset": vencidos_formset,
+        }
+        return render(request, self.template_name, context)
 
 
 
@@ -474,4 +592,55 @@ class TramitacaoPDFView(LoginRequiredMixin, View):
 
 
 ###################################################################################
+
+class ReuniaoListView(ListView):
+    model = Reuniao
+    template_name = "www/reuniao_list.html"
+    context_object_name = "reunioes"
+    paginate_by = 20
+
+    def get_queryset(self):
+        return (
+            Reuniao.objects
+            .select_related("comissao")
+            .order_by("-data", "-hora")
+        )
+
+
+class ReuniaoCreateView(CreateView):
+    model = Reuniao
+    form_class = ReuniaoForm
+    template_name = "www/reuniao_form.html"
+    success_url = reverse_lazy("reuniao_list")
+
+
+class ReuniaoUpdateView(UpdateView):
+    model = Reuniao
+    form_class = ReuniaoForm
+    template_name = "www/reuniao_form.html"
+    success_url = reverse_lazy("reuniao_list")
+
+
+class ReuniaoDetailView(DetailView):
+    model = Reuniao
+    template_name = "www/reuniao_detail.html"
+    context_object_name = "reuniao"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["pareceres"] = (
+            self.object.parecer_set
+            .select_related("relator", "tramitacao__proposicao")
+            .order_by("data_apresentacao")
+        )
+
+        return context
+
+
+
+###################################################################################
+
+
+
 

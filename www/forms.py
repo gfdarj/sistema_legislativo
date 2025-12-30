@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from django.utils.timezone import localdate
-from www.models import Proposicao, Tramitacao, Autor
+from django_ckeditor_5.widgets import CKEditor5Widget
+from www.models import Proposicao, Tramitacao, Autor, Reuniao, Parecer
 
 
 class ProposicaoForm(forms.ModelForm):
@@ -11,11 +11,12 @@ class ProposicaoForm(forms.ModelForm):
         fields = "__all__"
         widgets = {
             "tipo": forms.Select(attrs={"class": "form-select"}),
-            "numero": forms.TextInput(attrs={"class": "form-control"}),
+            "numero_formatado": forms.TextInput(attrs={"class": "form-control"}),
             "comissao_atual": forms.Select(attrs={"class": "form-select"}),
             "autores": forms.SelectMultiple(attrs={"class": "form-select", "size": 6}),
             "relator": forms.Select(attrs={"class": "form-select"}),
-            "ementa": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
+            "ementa": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+            "link_proposicao": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -36,12 +37,12 @@ class ProposicaoForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         tipo = cleaned_data.get("tipo")
-        numero = cleaned_data.get("numero_pl")
+        numero_formatado = cleaned_data.get("numero_pl")
 
-        if tipo and numero:
+        if tipo and numero_formatado:
             if Proposicao.objects.filter(
                 tipo=tipo,
-                numero_pl=numero
+                numero_pl=numero_formatado
             ).exclude(pk=self.instance.pk).exists():
                 raise ValidationError(
                     "Já existe uma proposição com esse número para este tipo."
@@ -63,68 +64,143 @@ class AutorForm(forms.ModelForm):
 
 
 class TramitacaoForm(forms.ModelForm):
-    existe_parecer_vencido = forms.BooleanField(
-        required=False,
-        label="Existe parecer vencido?"
-    )
-
     class Meta:
         model = Tramitacao
-        fields = [
-            "comissao",
-            "relator",
-            "data_entrada",
-            "observacao",
-
-            "parecer",
-            "texto_parecer",
-            "data_devolucao_relatoria",
-
-            "parecer_vencido",
-            "texto_parecer_vencido",
-            "data_devolucao_relatoria_vencido",
-
-            "data_publicacao_parecer",
-        ]
-
+        fields = ["comissao", "data_entrada", "data_saida", "observacao"]
         widgets = {
             "comissao": forms.Select(attrs={"class": "form-select"}),
-            "relator": forms.Select(attrs={"class": "form-select"}),
-            "data_entrada": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "observacao": forms.Textarea(attrs={"class": "form-control", "rows": 1}),
-            "parecer": forms.TextInput(attrs={"class": "form-control"}),
-            "data_devolucao_relatoria": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "parecer_vencido": forms.TextInput(attrs={"class": "form-control"}),
-            "data_devolucao_relatoria_vencido": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "data_publicacao_parecer": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "data_entrada": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"}
+            ),
+            "data_saida": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"}
+            ),
+            "observacao": forms.Textarea(
+                attrs={"class": "form-control", "rows": 2}
+            ),
         }
 
 
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop("user", None)
-        super().__init__(*args, **kwargs)
+class ParecerRelatorForm(forms.ModelForm):
+    class Meta:
+        model = Parecer
+        fields = [
+            "reuniao",
+            "relator",
+            "parecer",
+            "texto",
+            "data_apresentacao",
+        ]
+        widgets = {
+            "reuniao": forms.Select(attrs={"class": "form-select"}),
+            "relator": forms.Select(attrs={"class": "form-select"}),
+            "parecer": forms.TextInput(attrs={"class": "form-control"}),
+            "texto": CKEditor5Widget(
+                attrs={"class": "form-control"},
+                config_name="default",
+            ),
+            "data_apresentacao": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"}
+            ),
+        }
 
-        # Se já existe parecer vencido, marca o checkbox
-        if (
-            self.instance.parecer_vencido
-            or self.instance.texto_parecer_vencido
-            or self.instance.data_devolucao_relatoria_vencido
-        ):
-            self.fields["existe_parecer_vencido"].initial = True
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        obj.tipo = "RELATOR"
+        if commit:
+            obj.save()
+        return obj
 
-        if not self.instance.pk:
-            self.fields["data_entrada"].initial = localdate()
 
+class ParecerVencidoForm(forms.ModelForm):
+    class Meta:
+        model = Parecer
+        fields = [
+            "reuniao",
+            "relator",
+            "parecer",
+            "texto",
+            "data_apresentacao",
+        ]
+        widgets = {
+            "reuniao": forms.Select(attrs={"class": "form-select"}),
+            "relator": forms.Select(attrs={"class": "form-select"}),
+            "parecer": forms.TextInput(attrs={"class": "form-control"}),
+            "texto": CKEditor5Widget(
+                attrs={"class": "form-control"},
+                config_name="default",
+            ),
+            "data_apresentacao": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"}
+            ),
+        }
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        obj.tipo = "VENCIDO"
+        if commit:
+            obj.save()
+        return obj
+
+
+
+class ReuniaoForm(forms.ModelForm):
+
+    class Meta:
+        model = Reuniao
+        fields = [
+            "comissao",
+            "tipo",
+            "numero",
+            "ano",
+            "data",
+            "hora",
+            "pauta",
+            "ata",
+        ]
+
+        widgets = {
+            "data": forms.DateInput(
+                attrs={"type": "date"}
+            ),
+            "hora": forms.TimeInput(
+                attrs={"type": "time"}
+            ),
+            "pauta": forms.Textarea(
+                attrs={"rows": 2}
+            ),
+            "ata": forms.Textarea(
+                attrs={"rows": 2}
+            ),
+        }
 
     def clean(self):
         cleaned_data = super().clean()
 
-        if not cleaned_data.get("existe_parecer_vencido"):
-            cleaned_data["parecer_vencido"] = None
-            cleaned_data["texto_parecer_vencido"] = ""
-            cleaned_data["data_devolucao_relatoria_vencido"] = None
+        comissao = cleaned_data.get("comissao")
+        numero = cleaned_data.get("numero")
+        ano = cleaned_data.get("ano")
+
+        if comissao and numero and ano:
+            qs = Reuniao.objects.filter(
+                comissao=comissao,
+                numero=numero,
+                ano=ano
+            )
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+
+            if qs.exists():
+                raise forms.ValidationError(
+                    "Já existe uma reunião com esse número e ano para essa comissão."
+                )
 
         return cleaned_data
+
+
+
+
+
 
 
 

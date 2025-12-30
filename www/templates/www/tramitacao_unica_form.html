@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mb-3">
+    Nova Tramitação – {{ proposicao }}
+</h3>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ parecer_relator_form.media }}
+
+    {% for form in vencidos_formset %}
+        {{ form.media }}
+    {% endfor %}
+
+
+    <!-- ========================= -->
+    <!-- TRAMITAÇÃO -->
+    <!-- ========================= -->
+    <div class="card mb-4">
+        <div class="card-header fw-bold">
+            Tramitação
+        </div>
+        <div class="card-body">
+
+            {% if tramitacao_form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ tramitacao_form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Comissão</label>
+                    {{ tramitacao_form.comissao }}
+                    {% if tramitacao_form.comissao.errors %}
+                        <div class="text-danger">
+                            {{ tramitacao_form.comissao.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Data de Entrada</label>
+                    {{ tramitacao_form.data_entrada }}
+                    {% if tramitacao_form.data_entrada.errors %}
+                        <div class="text-danger">
+                            {{ tramitacao_form.data_entrada.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Data de Saída</label>
+                    {{ tramitacao_form.data_saida }}
+                    {% if tramitacao_form.data_saida.errors %}
+                        <div class="text-danger">
+                            {{ tramitacao_form.data_saida.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Observação</label>
+                {{ tramitacao_form.observacao }}
+                {% if tramitacao_form.observacao.errors %}
+                    <div class="text-danger">
+                        {{ tramitacao_form.observacao.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!-- PARECER DO RELATOR -->
+    <!-- ========================= -->
+    <div class="card mb-4">
+        <div class="card-header fw-bold">
+            Parecer do Relator
+        </div>
+        <div class="card-body">
+
+            {% if parecer_relator_form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ parecer_relator_form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Reunião</label>
+                    {{ parecer_relator_form.reuniao }}
+                    {% if parecer_relator_form.reuniao.errors %}
+                        <div class="text-danger">
+                            {{ parecer_relator_form.reuniao.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Relator</label>
+                    {{ parecer_relator_form.relator }}
+                    {% if parecer_relator_form.relator.errors %}
+                        <div class="text-danger">
+                            {{ parecer_relator_form.relator.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Ementa / Parecer</label>
+                {{ parecer_relator_form.parecer }}
+                {% if parecer_relator_form.parecer.errors %}
+                    <div class="text-danger">
+                        {{ parecer_relator_form.parecer.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Texto do Parecer</label>
+                {{ parecer_relator_form.texto }}
+                {% if parecer_relator_form.texto.errors %}
+                    <div class="text-danger">
+                        {{ parecer_relator_form.texto.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Data de Apresentação</label>
+                {{ parecer_relator_form.data_apresentacao }}
+                {% if parecer_relator_form.data_apresentacao.errors %}
+                    <div class="text-danger">
+                        {{ parecer_relator_form.data_apresentacao.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!-- VOTOS VENCIDOS -->
+    <!-- ========================= -->
+    <div class="card mb-4">
+        <div class="card-header fw-bold">
+            Votos Vencidos
+        </div>
+        <div class="card-body">
+
+            {{ vencidos_formset.management_form }}
+
+            <div id="vencidos-container">
+                {% for form in vencidos_formset %}
+                <div class="card mb-3 vencido-form">
+                    <div class="card-body">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Reunião</label>
+                                {{ form.reuniao }}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Relator</label>
+                                {{ form.relator }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Ementa / Parecer</label>
+                            {{ form.parecer }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Texto do Parecer</label>
+                            {{ form.texto }}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Data</label>
+                                {{ form.data_apresentacao }}
+                            </div>
+                        </div>
+
+                        {% if form.DELETE %}
+                        <div class="form-check mt-2">
+                            {{ form.DELETE }}
+                            <label class="form-check-label">
+                                Remover este voto vencido
+                            </label>
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    id="add-vencido">
+                ➕ Adicionar outro voto vencido
+            </button>
+
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!-- BOTÕES -->
+    <!-- ========================= -->
+    <div class="mb-4">
+        <button type="submit" class="btn btn-primary">
+            💾 Salvar tudo
+        </button>
+
+        <a href="{% url 'tramitacao_list' proposicao.pk %}"
+           class="btn btn-secondary">
+            Cancelar
+        </a>
+    </div>
+
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("vencidos-container");
+    const addBtn = document.getElementById("add-vencido");
+    const totalForms = document.getElementById("id_vencido-TOTAL_FORMS");
+
+    addBtn.addEventListener("click", function () {
+        const index = parseInt(totalForms.value, 10);
+        const firstForm = container.querySelector(".vencido-form");
+        const newForm = firstForm.cloneNode(true);
+
+        newForm.innerHTML = newForm.innerHTML
+            .replace(/vencido-0/g, `vencido-${index}`)
+            .replace(/vencido_0/g, `vencido_${index}`);
+
+        newForm.querySelectorAll("input, textarea, select").forEach(el => {
+            el.value = "";
+            if (el.type === "checkbox") el.checked = false;
+        });
+
+        container.appendChild(newForm);
+        totalForms.value = index + 1;
+    });
+});
+</script>
+
+{% endblock %}
