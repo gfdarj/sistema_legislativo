@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Reunião</h3>
+
+<div class="mb-3">
+    <strong>Comissão:</strong> {{ reuniao.comissao }}
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <strong>Tipo:</strong> {{ reuniao.get_tipo_display }}
+    </div>
+    <div class="col-md-4 mb-3">
+        <strong>Número:</strong> {{ reuniao.numero }}/{{ reuniao.ano }}
+    </div>
+    <div class="col-md-4 mb-3">
+        <strong>Data:</strong> {{ reuniao.data|date:"d/m/Y" }}
+        {{ reuniao.hora|time:"H:i" }}
+    </div>
+</div>
+
+<div class="mb-3">
+    <strong>Pauta</strong>
+    <div class="border rounded p-2">
+        {{ reuniao.pauta|default:"—"|linebreaks }}
+    </div>
+</div>
+
+<div class="mb-3">
+    <strong>Ata</strong>
+    <div class="border rounded p-2">
+        {{ reuniao.ata|default:"—"|linebreaks }}
+    </div>
+</div>
+
+<a href="{% url 'reuniao_update' reuniao.pk %}" class="btn btn-warning">
+    Editar
+</a>
+<a href="{% url 'reuniao_list' %}" class="btn btn-secondary">
+    Voltar
+</a>
+{% endblock %}

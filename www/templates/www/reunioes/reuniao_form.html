@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Reunião</h3>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Comissão</label>
+            {{ form.comissao }}
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Tipo</label>
+            {{ form.tipo }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Número</label>
+            {{ form.numero }}
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Ano</label>
+            {{ form.ano }}
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Data</label>
+            {{ form.data }}
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Hora</label>
+            {{ form.hora }}
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Pauta</label>
+        {{ form.pauta }}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ata</label>
+        {{ form.ata }}
+    </div>
+
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            {{ form.errors }}
+        </div>
+    {% endif %}
+
+    <button class="btn btn-primary">Salvar</button>
+    <a href="{% url 'reuniao_list' %}" class="btn btn-secondary">
+        Voltar
+    </a>
+</form>
+{% endblock %}

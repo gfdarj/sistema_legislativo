@@ -4,6 +4,11 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 from www.models import Proposicao, Tramitacao, Autor, Reuniao, Parecer
 
 
+class TesteCKForm(forms.Form):
+    texto = forms.CharField(widget=CKEditor5Widget())
+
+
+
 class ProposicaoForm(forms.ModelForm):
 
     class Meta:
@@ -95,10 +100,10 @@ class ParecerRelatorForm(forms.ModelForm):
             "reuniao": forms.Select(attrs={"class": "form-select"}),
             "relator": forms.Select(attrs={"class": "form-select"}),
             "parecer": forms.TextInput(attrs={"class": "form-control"}),
-            "texto": CKEditor5Widget(
-                attrs={"class": "form-control"},
-                config_name="default",
-            ),
+
+            # 🔥 AQUI ESTÁ A CORREÇÃO
+            "texto": CKEditor5Widget(config_name="default"),
+
             "data_apresentacao": forms.DateInput(
                 attrs={"type": "date", "class": "form-control"}
             ),
@@ -126,10 +131,7 @@ class ParecerVencidoForm(forms.ModelForm):
             "reuniao": forms.Select(attrs={"class": "form-select"}),
             "relator": forms.Select(attrs={"class": "form-select"}),
             "parecer": forms.TextInput(attrs={"class": "form-control"}),
-            "texto": CKEditor5Widget(
-                attrs={"class": "form-control"},
-                config_name="default",
-            ),
+            "texto": CKEditor5Widget(config_name="default"),
             "data_apresentacao": forms.DateInput(
                 attrs={"type": "date", "class": "form-control"}
             ),
@@ -199,6 +201,62 @@ class ReuniaoForm(forms.ModelForm):
 
 
 
+
+class ReuniaoForm(forms.ModelForm):
+    class Meta:
+        model = Reuniao
+        fields = [
+            "comissao",
+            "tipo",
+            "numero",
+            "ano",
+            "data",
+            "hora",
+            "pauta",
+            "ata",
+        ]
+        widgets = {
+            "data": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"}
+            ),
+            "hora": forms.TimeInput(
+                attrs={"type": "time", "class": "form-control"}
+            ),
+            "pauta": forms.Textarea(
+                attrs={"rows": 2, "class": "form-control"}
+            ),
+            "ata": forms.Textarea(
+                attrs={"rows": 2, "class": "form-control"}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for name, field in self.fields.items():
+            widget = field.widget
+
+            # evita sobrescrever widgets já configurados
+            if "class" in widget.attrs:
+                continue
+
+            if widget.__class__.__name__ == "Select":
+                widget.attrs["class"] = "form-select"
+            else:
+                widget.attrs["class"] = "form-control"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        data = cleaned_data.get("data")
+        ano = cleaned_data.get("ano")
+
+        if data and ano and data.year != ano:
+            self.add_error(
+                "ano",
+                "O ano deve ser o mesmo da data da reunião."
+            )
+
+        return cleaned_data
 
 
 

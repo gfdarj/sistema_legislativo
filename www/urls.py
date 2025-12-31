@@ -31,6 +31,7 @@ urlpatterns = [
     path("reuniao/nova/", ReuniaoCreateView.as_view(), name="reuniao_create"),
     path("reuniao/<int:pk>/editar/", ReuniaoUpdateView.as_view(), name="reuniao_update"),
     path("reuniao/<int:pk>/", ReuniaoDetailView.as_view(), name="reuniao_detail"),
+    path("reuniao/<int:pk>/excluir/", ReuniaoDeleteView.as_view(), name="reuniao_delete"),
 
 
     path("tipos/", TipoProposicaoListView.as_view(), name="tipo_list"),

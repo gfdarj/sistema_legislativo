@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Excluir Reunião</h3>
+
+<p>Confirma a exclusão da seguinte reunião?</p>
+
+<ul>
+    <li><strong>Comissão:</strong> {{ object.comissao }}</li>
+    <li><strong>Tipo:</strong> {{ object.get_tipo_display }}</li>
+    <li><strong>Número:</strong> {{ object.numero }}/{{ object.ano }}</li>
+    <li><strong>Data:</strong> {{ object.data|date:"d/m/Y" }}</li>
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+    <button class="btn btn-danger">Excluir</button>
+    <a href="{% url 'reuniao_list' %}" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+{% endblock %}

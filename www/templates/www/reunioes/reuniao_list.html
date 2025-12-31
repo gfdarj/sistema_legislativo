@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Reuniões</h3>
+
+<a href="{% url 'reuniao_create' %}" class="btn btn-primary mb-3">
+    Nova Reunião
+</a>
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Comissão</th>
+            <th>Tipo</th>
+            <th>Número</th>
+            <th>Data</th>
+            <th>Hora</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for reuniao in reunioes %}
+        <tr>
+            <td>{{ reuniao.comissao }}</td>
+            <td>{{ reuniao.get_tipo_display }}</td>
+            <td>{{ reuniao.numero }}/{{ reuniao.ano }}</td>
+            <td>{{ reuniao.data|date:"d/m/Y" }}</td>
+            <td>{{ reuniao.hora|time:"H:i" }}</td>
+            <td>
+                <a href="{% url 'reuniao_detail' reuniao.pk %}">
+                    Ver
+                </a>
+                &nbsp;|&nbsp;
+                <a href="{% url 'reuniao_update' reuniao.pk %}">
+                    Editar
+                </a>
+                &nbsp;|&nbsp;
+                <a href="{% url 'reuniao_delete' reuniao.pk %}">
+                    Excluir
+                </a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center">
+                Nenhuma reunião cadastrada.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

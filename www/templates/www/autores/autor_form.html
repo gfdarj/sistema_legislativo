@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Autor</h3>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button class="btn btn-primary" type="submit">Salvar</button>
+    <a href="{% url 'autor_list' %}" class="btn btn-secondary">Voltar</a>
+</form>
+
+{% endblock %}

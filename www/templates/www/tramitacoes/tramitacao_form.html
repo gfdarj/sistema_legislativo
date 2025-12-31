@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Tramitação</h3>
+
+<form method="post">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+
+    <!-- Comissão -->
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Comissão</label>
+            {{ form.comissao }}
+            {% if form.comissao.errors %}
+            <div class="text-danger">{{ form.comissao.errors }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Datas -->
+    <div class="row">
+        <div class="col-md-2 mb-3">
+            <label class="form-label">Data de Entrada</label>
+            {{ form.data_entrada }}
+            {% if form.data_entrada.errors %}
+            <div class="text-danger">{{ form.data_entrada.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-2 mb-3">
+            <label class="form-label">Data de Saída</label>
+            {{ form.data_saida }}
+            {% if form.data_saida.errors %}
+            <div class="text-danger">{{ form.data_saida.errors }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Observação -->
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Observação</label>
+        {{ form.observacao }}
+        {% if form.observacao.errors %}
+        <div class="text-danger">{{ form.observacao.errors }}</div>
+        {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Salvar Tramitação</button>
+    <a href="{% url 'tramitacao_list' proposicao.pk %}" class="btn btn-secondary">
+        Voltar
+    </a>
+
+    {% if tramitacao %}
+    <a href="{% url 'parecer_create' tramitacao.pk %}"
+       class="btn btn-outline-success">
+        ➕ Novo Parecer
+    </a>
+    {% endif %}
+</form>
+
+{% endblock %}

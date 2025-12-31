@@ -8,13 +8,21 @@ from django.views.generic import ListView, DetailView, CreateView, TemplateView,
 from django.urls import reverse_lazy
 from django.template.loader import render_to_string
 from weasyprint import HTML
-from django.forms import modelformset_factory
+from django.forms import formset_factory
+#from django.forms import modelformset_factory
+#from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from datetime import timedelta
 #-----
 from www.models import *
-from www.forms import TramitacaoForm, AutorForm, ProposicaoForm, ReuniaoForm, ParecerRelatorForm, ParecerVencidoForm
+from www.forms import *
+
+
+
+def teste_ckeditor(request):
+    form = TesteCKForm()
+    return render(request, "teste_ckeditor.html", {"form": form})
 
 
 ###################################################################################
@@ -245,7 +253,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
 class AutorListView(LoginRequiredMixin, ListView):
     model = Autor
-    template_name = "www/autor_list.html"
+    template_name = "www/autores/autor_list.html"
     context_object_name = "autores"
 
     def get_queryset(self):
@@ -261,20 +269,20 @@ class AutorListView(LoginRequiredMixin, ListView):
 class AutorCreateView(LoginRequiredMixin, CreateView):
     model = Autor
     form_class = AutorForm
-    template_name = "www/autor_form.html"
+    template_name = "www/autores/autor_form.html"
     success_url = reverse_lazy("autor_list")
 
 
 class AutorUpdateView(LoginRequiredMixin, UpdateView):
     model = Autor
     form_class = AutorForm
-    template_name = "www/autor_form.html"
+    template_name = "www/autores/autor_form.html"
     success_url = reverse_lazy("autor_list")
 
 
 class AutorDeleteView(LoginRequiredMixin, DeleteView):
     model = Autor
-    template_name = "www/autor_confirm_delete.html"
+    template_name = "www/autores/autor_confirm_delete.html"
     success_url = reverse_lazy("autor_list")
 
 
@@ -282,7 +290,7 @@ class AutorDeleteView(LoginRequiredMixin, DeleteView):
 
 class TipoProposicaoListView(LoginRequiredMixin, ListView):
     model = TipoProposicao
-    template_name = "www/tipoproposicao_list.html"
+    template_name = "www/tiposproposicoes/tipoproposicao_list.html"
     paginate_by = 20
 
 
@@ -291,7 +299,7 @@ class TipoProposicaoListView(LoginRequiredMixin, ListView):
 
 class ComissaoListView(LoginRequiredMixin, ListView):
     model = Comissao
-    template_name = "www/comissao_list.html"
+    template_name = "www/comissoes/comissao_list.html"
     paginate_by = 20
 
 
@@ -299,7 +307,7 @@ class ComissaoListView(LoginRequiredMixin, ListView):
 
 class TramitacaoListView(LoginRequiredMixin, ListView):
     model = Tramitacao
-    template_name = "www/tramitacao_list.html"
+    template_name = "www/tramitacoes/tramitacao_list.html"
     context_object_name = "tramitacoes"
 
     def get_queryset(self):
@@ -349,78 +357,60 @@ class TramitacaoListView(LoginRequiredMixin, ListView):
 
 # View ÚNICA Tramitacao - Parecer - Parecer vencido
 class TramitacaoComParecerCreateView(View):
-    template_name = "www/tramitacao_unica_form.html"
-
-    ParecerVencidoFormSet = modelformset_factory(
-        Parecer,
-        form=ParecerVencidoForm,
-        extra=1,
-        can_delete=True
-    )
+    template_name = "www/tramitacoes/tramitacao_unica_form.html"
 
     def get(self, request, proposicao_id):
         proposicao = get_object_or_404(Proposicao, pk=proposicao_id)
 
-        context = {
-            "proposicao": proposicao,
-            "tramitacao_form": TramitacaoForm(),
-            "parecer_relator_form": ParecerRelatorForm(),
-            "vencidos_formset": self.ParecerVencidoFormSet(
-                queryset=Parecer.objects.none(),
-                prefix="vencido"
-            ),
-        }
-        return render(request, self.template_name, context)
+        # 🔑 DEFAULT TEM QUE SER ZERO
+        qtd_vencidos = int(request.GET.get("vencidos", 0))
 
+        tramitacao_form = TramitacaoForm()
+        parecer_relator_form = ParecerRelatorForm()
+
+        # 🔥 FORMSET SEM PARENT (CRIAÇÃO)
+        VencidosFormSet = formset_factory(
+            ParecerVencidoForm,
+            extra=qtd_vencidos,
+            can_delete=True
+        )
+
+        vencidos_formset = VencidosFormSet(prefix="vencido")
+
+        # DEBUG (pode remover depois)
+        print("EXTRA:", vencidos_formset.total_form_count())
+        print("FORMS:", len(vencidos_formset.forms))
+
+        return render(request, self.template_name, {
+            "proposicao": proposicao,
+            "tramitacao_form": tramitacao_form,
+            "parecer_relator_form": parecer_relator_form,
+            "vencidos_formset": vencidos_formset,
+        })
+
+    @transaction.atomic
     def post(self, request, proposicao_id):
         proposicao = get_object_or_404(Proposicao, pk=proposicao_id)
 
         tramitacao_form = TramitacaoForm(request.POST)
         parecer_relator_form = ParecerRelatorForm(request.POST)
-        vencidos_formset = ParecerVencidoFormSet(
+
+        VencidosFormSet = formset_factory(
+            ParecerVencidoForm,
+            extra=0,
+            can_delete=True
+        )
+        vencidos_formset = VencidosFormSet(
             request.POST,
-            queryset=Parecer.objects.none(),
             prefix="vencido"
         )
-
-        forms_valid = (
-            tramitacao_form.is_valid()
-            and parecer_relator_form.is_valid()
-            and vencidos_formset.is_valid()
-        )
-
-        if forms_valid:
-            with transaction.atomic():
-                tramitacao = tramitacao_form.save(commit=False)
-                tramitacao.proposicao = proposicao
-                tramitacao.save()
-
-                parecer_relator = parecer_relator_form.save(commit=False)
-                parecer_relator.tramitacao = tramitacao
-                parecer_relator.save()
-
-                for form in vencidos_formset:
-                    if form.cleaned_data and not form.cleaned_data.get("DELETE"):
-                        parecer = form.save(commit=False)
-                        parecer.tramitacao = tramitacao
-                        parecer.save()
-
-            return redirect("tramitacao_list", proposicao.pk)
-
-        context = {
-            "proposicao": proposicao,
-            "tramitacao_form": tramitacao_form,
-            "parecer_relator_form": parecer_relator_form,
-            "vencidos_formset": vencidos_formset,
-        }
-        return render(request, self.template_name, context)
 
 
 
 class TramitacaoCreateView(LoginRequiredMixin, CreateView):
     model = Tramitacao
     form_class = TramitacaoForm
-    template_name = "www/tramitacao_form.html"
+    template_name = "www/tramitacoes/tramitacao_form.html"
 
     def dispatch(self, request, *args, **kwargs):
         # garante que a proposição existe
@@ -467,7 +457,7 @@ class TramitacaoCreateView(LoginRequiredMixin, CreateView):
 class TramitacaoUpdateView(LoginRequiredMixin, UpdateView):
     model = Tramitacao
     form_class = TramitacaoForm
-    template_name = "www/tramitacao_form.html"
+    template_name = "www/tramitacoes/tramitacao_form.html"
     pk_url_kwarg = "t"  # 👈 id da tramitação
 
     def dispatch(self, request, *args, **kwargs):
@@ -522,7 +512,7 @@ class TramitacaoUpdateView(LoginRequiredMixin, UpdateView):
 
 class TramitacaoDeleteView(LoginRequiredMixin, DeleteView):
     model = Tramitacao
-    template_name = "www/tramitacao_confirm_delete.html"
+    template_name = "www/tramitacoes/tramitacao_confirm_delete.html"
     pk_url_kwarg = "t"  # 👈 id da tramitação
 
     def dispatch(self, request, *args, **kwargs):
@@ -577,7 +567,7 @@ class TramitacaoPDFView(LoginRequiredMixin, View):
         tramitacao = get_object_or_404(Tramitacao, pk=pk)
 
         html_string = render_to_string(
-            "www/tramitacao_pdf.html",
+            "www/tramitacoes/tramitacao_pdf.html",
             {"tramitacao": tramitacao}
         )
 
@@ -591,56 +581,45 @@ class TramitacaoPDFView(LoginRequiredMixin, View):
         return response
 
 
+
 ###################################################################################
 
-class ReuniaoListView(ListView):
+
+class ReuniaoListView(LoginRequiredMixin, ListView):
     model = Reuniao
-    template_name = "www/reuniao_list.html"
+    template_name = "www/reunioes/reuniao_list.html"
     context_object_name = "reunioes"
-    paginate_by = 20
+    paginate_by = 10
 
     def get_queryset(self):
-        return (
-            Reuniao.objects
-            .select_related("comissao")
-            .order_by("-data", "-hora")
-        )
+        qs = super().get_queryset()
+        return qs.select_related("comissao").order_by("-ano", "-data", "-hora")
 
 
-class ReuniaoCreateView(CreateView):
+class ReuniaoCreateView(LoginRequiredMixin, CreateView):
     model = Reuniao
     form_class = ReuniaoForm
-    template_name = "www/reuniao_form.html"
+    template_name = "www/reunioes/reuniao_form.html"
     success_url = reverse_lazy("reuniao_list")
 
 
-class ReuniaoUpdateView(UpdateView):
+class ReuniaoUpdateView(LoginRequiredMixin, UpdateView):
     model = Reuniao
     form_class = ReuniaoForm
-    template_name = "www/reuniao_form.html"
+    template_name = "www/reunioes/reuniao_form.html"
     success_url = reverse_lazy("reuniao_list")
 
 
-class ReuniaoDetailView(DetailView):
+class ReuniaoDetailView(LoginRequiredMixin, DetailView):
     model = Reuniao
-    template_name = "www/reuniao_detail.html"
+    template_name = "www/reunioes/reuniao_detail.html"
     context_object_name = "reuniao"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
 
-        context["pareceres"] = (
-            self.object.parecer_set
-            .select_related("relator", "tramitacao__proposicao")
-            .order_by("data_apresentacao")
-        )
-
-        return context
-
-
-
-###################################################################################
-
+class ReuniaoDeleteView(LoginRequiredMixin, DeleteView):
+    model = Reuniao
+    template_name = "www/reunioes/reuniao_confirm_delete.html"
+    success_url = reverse_lazy("reuniao_list")
 
 
 
