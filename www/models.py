@@ -171,9 +171,15 @@ class Reuniao(models.Model):
     class Meta:
         unique_together = ("comissao", "numero", "ano")
 
-    def __str__(self):
-        return f"{obter_ordinal(self.numero, feminino=TRUE)} reunião {self.tipo} de {self.ano}"
+    @property
+    def descricao(self):
+        return (
+            f"{obter_ordinal(self.numero, feminino=True)} "
+            f"reunião {self.tipo} de {self.ano}"
+        )
 
+    def __str__(self):
+        return self.descricao
 
 #########################################################################################
 
