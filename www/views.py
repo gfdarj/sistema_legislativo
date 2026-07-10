@@ -42,7 +42,9 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
             .prefetch_related(
                 "autores",
                 "tramitacoes",
-                "tramitacoes__pareceres",
+                "tramitacoes__relator",
+                "tramitacoes__reuniao",
+                "tramitacoes__pareceres_vencidos",
             )
         )
 
@@ -88,10 +90,10 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
         if aguardando_parecer == "1":
             qs = (
                 qs
-                .exclude(tramitacoes__pareceres__tipo="RELATOR")
+                .exclude(tramitacoes__relator__isnull=False)
             )
 
-        return qs.distinct()
+        return qs.distinct().order_by("-ultima_data", "-data_publicacao")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -193,11 +195,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         #
         # Regra:
         # - última tramitação na comissão
-        # - NÃO existe parecer do tipo RELATOR nessa tramitação
+        # - NÃO existe parecer do relator preenchido nessa tramitação
         aguardando_parecer = (
             proposicoes
             .exclude(
-                tramitacoes__pareceres__tipo="RELATOR"
+                tramitacoes__relator__isnull=False
             )
             .distinct()
             .count()
@@ -340,11 +342,13 @@ class TramitacaoListView(LoginRequiredMixin, ListView):
             .select_related(
                 "proposicao",
                 "comissao",
+                "relator",
+                "reuniao",
             )
             .prefetch_related(
-                "pareceres",
-                "pareceres__relator",
-                "pareceres__reuniao",
+                "pareceres_vencidos",
+                "pareceres_vencidos__relator",
+                "pareceres_vencidos__reuniao",
             )
             .order_by("data_entrada")
         )
@@ -366,7 +370,6 @@ class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
         qtd_vencidos = int(request.GET.get("vencidos", 0))
 
         tramitacao_form = TramitacaoForm(user=request.user)
-        parecer_relator_form = ParecerRelatorForm()
 
         # 🔥 FORMSET SEM PARENT (CRIAÇÃO)
         VencidosFormSet = formset_factory(
@@ -380,7 +383,6 @@ class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
         return render(request, self.template_name, {
             "proposicao": proposicao,
             "tramitacao_form": tramitacao_form,
-            "parecer_relator_form": parecer_relator_form,
             "vencidos_formset": vencidos_formset,
         })
 
@@ -396,7 +398,6 @@ class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
                 raise Http404("Acesso negado")
 
         tramitacao_form = TramitacaoForm(request.POST, user=user)
-        parecer_relator_form = ParecerRelatorForm(request.POST)
 
         VencidosFormSet = formset_factory(
             ParecerVencidoForm,
@@ -410,12 +411,11 @@ class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
 
         forms_validos = (
             tramitacao_form.is_valid()
-            and parecer_relator_form.is_valid()
             and vencidos_formset.is_valid()
         )
 
         if forms_validos:
-            # 1️⃣ Salva a tramitação
+            # 1️⃣ Salva a tramitação (já com o parecer do relator embutido)
             tramitacao = tramitacao_form.save(commit=False)
             tramitacao.proposicao = proposicao
 
@@ -425,12 +425,7 @@ class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
 
             tramitacao.save()
 
-            # 2️⃣ Salva o parecer do relator vinculado à tramitação
-            parecer_relator = parecer_relator_form.save(commit=False)
-            parecer_relator.tramitacao = tramitacao
-            parecer_relator.save()
-
-            # 3️⃣ Salva os pareceres vencidos (ignorando os marcados para exclusão
+            # 2️⃣ Salva os pareceres vencidos (ignorando os marcados para exclusão
             #     e os formulários extras deixados em branco)
             for form in vencidos_formset:
                 if form.cleaned_data.get("DELETE"):
@@ -449,7 +444,6 @@ class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
         return render(request, self.template_name, {
             "proposicao": proposicao,
             "tramitacao_form": tramitacao_form,
-            "parecer_relator_form": parecer_relator_form,
             "vencidos_formset": vencidos_formset,
         })
 
@@ -504,7 +498,7 @@ class TramitacaoCreateView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy(
             "tramitacao_list",
-            kwargs={"proposicao_id": self.proposicao.id}
+            kwargs={"proposicao_id": self.proposicao.pk}
         )
 
 
@@ -530,7 +524,7 @@ class TramitacaoUpdateView(LoginRequiredMixin, UpdateView):
         user = self.request.user
 
         # 🔐 garante que a tramitação pertence à proposição
-        if obj.proposicao_id != self.proposicao.id:
+        if obj.proposicao_id != self.proposicao.pk:
             raise Http404("Tramitação inválida")
 
         # 🔒 permissão por comissão
@@ -560,7 +554,7 @@ class TramitacaoUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy(
             "tramitacao_list",
-            kwargs={"proposicao_id": self.proposicao.id}
+            kwargs={"proposicao_id": self.proposicao.pk}
         )
 
 
@@ -584,7 +578,7 @@ class TramitacaoDeleteView(LoginRequiredMixin, DeleteView):
         user = self.request.user
 
         # 🔐 garante vínculo com a proposição
-        if obj.proposicao_id != self.proposicao.id:
+        if obj.proposicao_id != self.proposicao.pk:
             raise Http404("Tramitação inválida")
 
         # 🔒 permissão por comissão
@@ -602,13 +596,7 @@ class TramitacaoDeleteView(LoginRequiredMixin, DeleteView):
     def get_success_url(self):
         return reverse_lazy(
             "tramitacao_list",
-            kwargs={"proposicao_id": self.proposicao.id}
-        )
-
-    def get_success_url(self):
-        return reverse_lazy(
-            "tramitacao_list",
-            kwargs={"proposicao_id": self.proposicao.id}
+            kwargs={"proposicao_id": self.proposicao.pk}
         )
 
 

@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django_ckeditor_5.widgets import CKEditor5Widget
-from www.models import Proposicao, Tramitacao, Autor, Reuniao, Parecer
+from www.models import Proposicao, Tramitacao, Autor, Reuniao, ParecerVencido
 
 
 class TesteCKForm(forms.Form):
@@ -69,7 +69,17 @@ class AutorForm(forms.ModelForm):
 class TramitacaoForm(forms.ModelForm):
     class Meta:
         model = Tramitacao
-        fields = ["comissao", "data_entrada", "data_saida", "observacao"]
+        fields = [
+            "comissao",
+            "data_entrada",
+            "data_saida",
+            "observacao",
+            "reuniao",
+            "relator",
+            "parecer",
+            "texto",
+            "data_apresentacao",
+        ]
         widgets = {
             "comissao": forms.Select(attrs={"class": "form-select"}),
             "data_entrada": forms.DateInput(
@@ -81,6 +91,13 @@ class TramitacaoForm(forms.ModelForm):
             "observacao": forms.Textarea(
                 attrs={"class": "form-control", "rows": 2}
             ),
+            "reuniao": forms.Select(attrs={"class": "form-select"}),
+            "relator": forms.Select(attrs={"class": "form-select"}),
+            "parecer": forms.TextInput(attrs={"class": "form-control"}),
+            "texto": CKEditor5Widget(config_name="default"),
+            "data_apresentacao": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"}
+            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -91,40 +108,9 @@ class TramitacaoForm(forms.ModelForm):
             self.fields["comissao"].initial = user.perfil.comissao_padrao
 
 
-class ParecerRelatorForm(forms.ModelForm):
-    class Meta:
-        model = Parecer
-        fields = [
-            "reuniao",
-            "relator",
-            "parecer",
-            "texto",
-            "data_apresentacao",
-        ]
-        widgets = {
-            "reuniao": forms.Select(attrs={"class": "form-select"}),
-            "relator": forms.Select(attrs={"class": "form-select"}),
-            "parecer": forms.TextInput(attrs={"class": "form-control"}),
-
-            # 🔥 AQUI ESTÁ A CORREÇÃO
-            "texto": CKEditor5Widget(config_name="default"),
-
-            "data_apresentacao": forms.DateInput(
-                attrs={"type": "date", "class": "form-control"}
-            ),
-        }
-
-    def save(self, commit=True):
-        obj = super().save(commit=False)
-        obj.tipo = "RELATOR"
-        if commit:
-            obj.save()
-        return obj
-
-
 class ParecerVencidoForm(forms.ModelForm):
     class Meta:
-        model = Parecer
+        model = ParecerVencido
         fields = [
             "reuniao",
             "relator",
@@ -141,13 +127,6 @@ class ParecerVencidoForm(forms.ModelForm):
                 attrs={"type": "date", "class": "form-control"}
             ),
         }
-
-    def save(self, commit=True):
-        obj = super().save(commit=False)
-        obj.tipo = "VENCIDO"
-        if commit:
-            obj.save()
-        return obj
 
 
 

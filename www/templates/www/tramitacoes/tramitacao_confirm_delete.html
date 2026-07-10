@@ -11,7 +11,7 @@
 
 <form method="post">
     {% csrf_token %}
-    <a href="{% url 'tramitacao_list' object.proposicao.id %}"
+    <a href="{% url 'tramitacao_list' object.proposicao.pk %}"
        class="btn btn-secondary">
         Cancelar
     </a>

@@ -36,21 +36,24 @@
 <div class="info">
     <p><strong>Proposição:</strong> {{ tramitacao.proposicao }}</p>
     <p><strong>Comissão:</strong> {{ tramitacao.comissao }}</p>
-    <p><strong>Relator:</strong> {{ tramitacao.relator }}</p>
+    <p><strong>Relator:</strong> {{ tramitacao.relator|default:"—" }}</p>
     <p><strong>Data:</strong> {{ tramitacao.data_entrada|date:"d/m/Y" }}</p>
 </div>
 
 <hr>
 
-{{ tramitacao.texto_parecer|safe }}
+{{ tramitacao.texto|safe }}
 
-{% if tramitacao.texto_parecer_vencido %}
+{% for voto in tramitacao.pareceres_vencidos.all %}
     <BR>
     <hr>
     <BR>
     <h1>VOTO EM SEPARADO</h1>
-    {{ tramitacao.texto_parecer_vencido|safe }}
-{% endif %}
+    <div class="info">
+        <p><strong>Relator:</strong> {{ voto.relator }}</p>
+    </div>
+    {{ voto.texto|safe }}
+{% endfor %}
 
 </body>
 </html>

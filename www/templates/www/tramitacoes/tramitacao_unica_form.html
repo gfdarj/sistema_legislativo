@@ -2,7 +2,6 @@
 
 {% block extra_head %}
     {{ tramitacao_form.media }}
-    {{ parecer_relator_form.media }}
     {{ vencidos_formset.media }}
 {% endblock %}
 
@@ -16,11 +15,11 @@
     {% csrf_token %}
 
     <!-- ========================= -->
-    <!-- TRAMITAÇÃO -->
+    <!-- TRAMITAÇÃO + PARECER DO RELATOR -->
     <!-- ========================= -->
     <div class="card mb-4">
         <div class="card-header fw-bold">
-            Tramitação
+            Tramitação e Parecer do Relator
         </div>
         <div class="card-body">
 
@@ -52,49 +51,33 @@
                 {{ tramitacao_form.observacao }}
             </div>
 
-        </div>
-    </div>
-
-    <!-- ========================= -->
-    <!-- PARECER DO RELATOR -->
-    <!-- ========================= -->
-    <div class="card mb-4">
-        <div class="card-header fw-bold">
-            Parecer do Relator
-        </div>
-        <div class="card-body">
-
-            {% if parecer_relator_form.non_field_errors %}
-                <div class="alert alert-danger">
-                    {{ parecer_relator_form.non_field_errors }}
-                </div>
-            {% endif %}
+            <hr>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Reunião</label>
-                    {{ parecer_relator_form.reuniao }}
+                    {{ tramitacao_form.reuniao }}
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Relator</label>
-                    {{ parecer_relator_form.relator }}
+                    {{ tramitacao_form.relator }}
                 </div>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Ementa / Parecer</label>
-                {{ parecer_relator_form.parecer }}
+                {{ tramitacao_form.parecer }}
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Texto do Parecer</label>
-                {{ parecer_relator_form.texto }}
+                {{ tramitacao_form.texto }}
             </div>
 
             <div class="col-md-4 mb-3">
                 <label class="form-label">Data de Apresentação</label>
-                {{ parecer_relator_form.data_apresentacao }}
+                {{ tramitacao_form.data_apresentacao }}
             </div>
 
         </div>

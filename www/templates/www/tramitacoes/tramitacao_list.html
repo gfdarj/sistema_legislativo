@@ -32,14 +32,14 @@
         <tr>
             <td>{{ t.data_entrada|date:"d/m/Y" }}</td>
             <td>{{ t.comissao }}</td>
-            <td>{{ t.relator|default:"—" }}</td>
+            <td>{{ t.relator_atual|default:"—" }}</td>
             <td>{{ t.observacao }}</td>
             <td>
-                <a href="{% url 'tramitacao_update' proposicao.id t.id %}">
+                <a href="{% url 'tramitacao_update' proposicao.pk t.id %}">
                     Editar
                 </a>
                 &nbsp;|&nbsp;
-                <a href="{% url 'tramitacao_delete' proposicao.id t.id %}">
+                <a href="{% url 'tramitacao_delete' proposicao.pk t.id %}">
                     Excluir
                 </a>
             </td>

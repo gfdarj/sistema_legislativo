@@ -55,13 +55,6 @@
     <a href="{% url 'tramitacao_list' proposicao.pk %}" class="btn btn-secondary">
         Voltar
     </a>
-
-    {% if tramitacao %}
-    <a href="{% url 'parecer_create' tramitacao.pk %}"
-       class="btn btn-outline-success">
-        ➕ Novo Parecer
-    </a>
-    {% endif %}
 </form>
 
 {% endblock %}

@@ -140,7 +140,7 @@ class Proposicao(models.Model):
     @property
     def relator_atual(self):
         ultima = self.tramitacoes.order_by("-data_entrada").first()
-        return ultima.relator if ultima else None
+        return ultima.relator_atual if ultima else None
 
 
 #########################################################################################
@@ -191,6 +191,27 @@ class Tramitacao(models.Model):
     observacao = models.TextField(blank=True)
     criada_em = models.DateTimeField(auto_now_add=True)
 
+    # =========================
+    # 🔹 PARECER DO RELATOR (1-para-1 com a tramitação)
+    # =========================
+    reuniao = models.ForeignKey(
+        Reuniao,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="tramitacoes"
+    )
+    relator = models.ForeignKey(
+        Autor,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="tramitacoes_como_relator"
+    )
+    parecer = models.CharField(max_length=200, blank=True)
+    texto = CKEditor5Field(blank=True)
+    data_apresentacao = models.DateField(null=True, blank=True)
+
     class Meta:
         ordering = ["data_entrada"]
 
@@ -200,32 +221,39 @@ class Tramitacao(models.Model):
             f"({self.data_entrada})"
         )
 
+    @property
+    def relator_atual(self):
+        return self.relator
+
+    @property
+    def tem_parecer_relator(self):
+        return self.relator_id is not None
+
 
 #########################################################################################
 
-class Parecer(models.Model):
-    TIPO_CHOICES = [
-        ("RELATOR", "Parecer do Relator"),
-        ("VENCIDO", "Parecer Vencido"),
-    ]
-
+class ParecerVencido(models.Model):
     tramitacao = models.ForeignKey(
         Tramitacao,
         on_delete=models.CASCADE,
-        related_name="pareceres"
+        related_name="pareceres_vencidos"
     )
     reuniao = models.ForeignKey(
         Reuniao,
         on_delete=models.PROTECT
     )
     relator = models.ForeignKey(Autor, on_delete=models.PROTECT)
-    tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
     parecer = models.CharField(max_length=200)
     texto = CKEditor5Field()
     data_apresentacao = models.DateField()
 
     class Meta:
+        verbose_name = "Parecer Vencido"
+        verbose_name_plural = "Pareceres Vencidos"
         ordering = ["data_apresentacao"]
+
+    def __str__(self):
+        return f"Voto vencido de {self.relator} em {self.tramitacao}"
 
 
 #########################################################################################
