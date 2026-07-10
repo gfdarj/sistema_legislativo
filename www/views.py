@@ -356,7 +356,7 @@ class TramitacaoListView(LoginRequiredMixin, ListView):
 
 
 # View ÚNICA Tramitacao - Parecer - Parecer vencido
-class TramitacaoComParecerCreateView(View):
+class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
     template_name = "www/tramitacoes/tramitacao_unica_form.html"
 
     def get(self, request, proposicao_id):
@@ -365,7 +365,7 @@ class TramitacaoComParecerCreateView(View):
         # 🔑 DEFAULT TEM QUE SER ZERO
         qtd_vencidos = int(request.GET.get("vencidos", 0))
 
-        tramitacao_form = TramitacaoForm()
+        tramitacao_form = TramitacaoForm(user=request.user)
         parecer_relator_form = ParecerRelatorForm()
 
         # 🔥 FORMSET SEM PARENT (CRIAÇÃO)
@@ -376,10 +376,6 @@ class TramitacaoComParecerCreateView(View):
         )
 
         vencidos_formset = VencidosFormSet(prefix="vencido")
-
-        # DEBUG (pode remover depois)
-        print("EXTRA:", vencidos_formset.total_form_count())
-        print("FORMS:", len(vencidos_formset.forms))
 
         return render(request, self.template_name, {
             "proposicao": proposicao,
@@ -392,7 +388,14 @@ class TramitacaoComParecerCreateView(View):
     def post(self, request, proposicao_id):
         proposicao = get_object_or_404(Proposicao, pk=proposicao_id)
 
-        tramitacao_form = TramitacaoForm(request.POST)
+        # 🔒 mesma restrição de comissão usada nas outras views de tramitação
+        user = request.user
+        if not user.is_superuser:
+            ultima = proposicao.tramitacoes.order_by("-data_entrada").first()
+            if ultima and ultima.comissao != getattr(user.perfil, "comissao_padrao", None):
+                raise Http404("Acesso negado")
+
+        tramitacao_form = TramitacaoForm(request.POST, user=user)
         parecer_relator_form = ParecerRelatorForm(request.POST)
 
         VencidosFormSet = formset_factory(
@@ -404,6 +407,51 @@ class TramitacaoComParecerCreateView(View):
             request.POST,
             prefix="vencido"
         )
+
+        forms_validos = (
+            tramitacao_form.is_valid()
+            and parecer_relator_form.is_valid()
+            and vencidos_formset.is_valid()
+        )
+
+        if forms_validos:
+            # 1️⃣ Salva a tramitação
+            tramitacao = tramitacao_form.save(commit=False)
+            tramitacao.proposicao = proposicao
+
+            # 🔒 força a comissão do usuário, exceto para superusuário
+            if not user.is_superuser:
+                tramitacao.comissao = user.perfil.comissao_padrao
+
+            tramitacao.save()
+
+            # 2️⃣ Salva o parecer do relator vinculado à tramitação
+            parecer_relator = parecer_relator_form.save(commit=False)
+            parecer_relator.tramitacao = tramitacao
+            parecer_relator.save()
+
+            # 3️⃣ Salva os pareceres vencidos (ignorando os marcados para exclusão
+            #     e os formulários extras deixados em branco)
+            for form in vencidos_formset:
+                if form.cleaned_data.get("DELETE"):
+                    continue
+                if not form.cleaned_data:
+                    continue
+
+                parecer_vencido = form.save(commit=False)
+                parecer_vencido.tramitacao = tramitacao
+                parecer_vencido.save()
+
+            return redirect("tramitacao_list", proposicao_id=proposicao.pk)
+
+        # ❌ Algum formulário é inválido: re-renderiza a tela com os erros,
+        #    preservando a quantidade de formulários de votos vencidos enviada.
+        return render(request, self.template_name, {
+            "proposicao": proposicao,
+            "tramitacao_form": tramitacao_form,
+            "parecer_relator_form": parecer_relator_form,
+            "vencidos_formset": vencidos_formset,
+        })
 
 
 
@@ -445,6 +493,12 @@ class TramitacaoCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["proposicao"] = self.proposicao
         return context
+
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
 
     def get_success_url(self):

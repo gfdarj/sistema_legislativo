@@ -17,9 +17,7 @@ class ProposicaoForm(forms.ModelForm):
         widgets = {
             "tipo": forms.Select(attrs={"class": "form-select"}),
             "numero_formatado": forms.TextInput(attrs={"class": "form-control"}),
-            "comissao_atual": forms.Select(attrs={"class": "form-select"}),
             "autores": forms.SelectMultiple(attrs={"class": "form-select", "size": 6}),
-            "relator": forms.Select(attrs={"class": "form-select"}),
             "ementa": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
             "link_proposicao": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
         }
@@ -42,12 +40,12 @@ class ProposicaoForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         tipo = cleaned_data.get("tipo")
-        numero_formatado = cleaned_data.get("numero_pl")
+        numero_formatado = cleaned_data.get("numero_formatado")
 
         if tipo and numero_formatado:
             if Proposicao.objects.filter(
                 tipo=tipo,
-                numero_pl=numero_formatado
+                numero_formatado=numero_formatado
             ).exclude(pk=self.instance.pk).exists():
                 raise ValidationError(
                     "Já existe uma proposição com esse número para este tipo."
@@ -84,6 +82,13 @@ class TramitacaoForm(forms.ModelForm):
                 attrs={"class": "form-control", "rows": 2}
             ),
         }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+        if user and hasattr(user, "perfil") and user.perfil.comissao_padrao:
+            self.fields["comissao"].initial = user.perfil.comissao_padrao
 
 
 class ParecerRelatorForm(forms.ModelForm):
@@ -143,62 +148,6 @@ class ParecerVencidoForm(forms.ModelForm):
         if commit:
             obj.save()
         return obj
-
-
-
-class ReuniaoForm(forms.ModelForm):
-
-    class Meta:
-        model = Reuniao
-        fields = [
-            "comissao",
-            "tipo",
-            "numero",
-            "ano",
-            "data",
-            "hora",
-            "pauta",
-            "ata",
-        ]
-
-        widgets = {
-            "data": forms.DateInput(
-                attrs={"type": "date"}
-            ),
-            "hora": forms.TimeInput(
-                attrs={"type": "time"}
-            ),
-            "pauta": forms.Textarea(
-                attrs={"rows": 2}
-            ),
-            "ata": forms.Textarea(
-                attrs={"rows": 2}
-            ),
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-
-        comissao = cleaned_data.get("comissao")
-        numero = cleaned_data.get("numero")
-        ano = cleaned_data.get("ano")
-
-        if comissao and numero and ano:
-            qs = Reuniao.objects.filter(
-                comissao=comissao,
-                numero=numero,
-                ano=ano
-            )
-            if self.instance.pk:
-                qs = qs.exclude(pk=self.instance.pk)
-
-            if qs.exists():
-                raise forms.ValidationError(
-                    "Já existe uma reunião com esse número e ano para essa comissão."
-                )
-
-        return cleaned_data
-
 
 
 
