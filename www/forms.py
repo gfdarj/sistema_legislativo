@@ -66,7 +66,20 @@ class AutorForm(forms.ModelForm):
         }
 
 
+class ReuniaoChoiceField(forms.ModelChoiceField):
+    """Combo de Reunião mostrando também a sigla da comissão."""
+
+    def label_from_instance(self, obj):
+        return f"[{obj.comissao.sigla}] {obj}"
+
+
 class TramitacaoForm(forms.ModelForm):
+    reuniao = ReuniaoChoiceField(
+        queryset=Reuniao.objects.select_related("comissao"),
+        widget=forms.Select(attrs={"class": "form-select"}),
+        required=False,
+    )
+
     class Meta:
         model = Tramitacao
         fields = [
@@ -78,7 +91,6 @@ class TramitacaoForm(forms.ModelForm):
             "relator",
             "parecer",
             "texto",
-            "data_apresentacao",
         ]
         widgets = {
             "comissao": forms.Select(attrs={"class": "form-select"}),
@@ -91,13 +103,9 @@ class TramitacaoForm(forms.ModelForm):
             "observacao": forms.Textarea(
                 attrs={"class": "form-control", "rows": 2}
             ),
-            "reuniao": forms.Select(attrs={"class": "form-select"}),
             "relator": forms.Select(attrs={"class": "form-select"}),
             "parecer": forms.TextInput(attrs={"class": "form-control"}),
             "texto": CKEditor5Widget(config_name="default"),
-            "data_apresentacao": forms.DateInput(
-                attrs={"type": "date", "class": "form-control"}
-            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -109,6 +117,11 @@ class TramitacaoForm(forms.ModelForm):
 
 
 class ParecerVencidoForm(forms.ModelForm):
+    reuniao = ReuniaoChoiceField(
+        queryset=Reuniao.objects.select_related("comissao"),
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+
     class Meta:
         model = ParecerVencido
         fields = [
@@ -119,7 +132,6 @@ class ParecerVencidoForm(forms.ModelForm):
             "data_apresentacao",
         ]
         widgets = {
-            "reuniao": forms.Select(attrs={"class": "form-select"}),
             "relator": forms.Select(attrs={"class": "form-select"}),
             "parecer": forms.TextInput(attrs={"class": "form-control"}),
             "texto": CKEditor5Widget(config_name="default"),

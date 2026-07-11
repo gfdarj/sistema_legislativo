@@ -15,11 +15,17 @@ urlpatterns = [
 
     path("proposicao/<int:proposicao_id>/tramitacoes/", TramitacaoListView.as_view(), name="tramitacao_list"),
     ####path("proposicao/<int:proposicao_id>/tramitacoes/nova/", TramitacaoCreateView.as_view(), name="tramitacao_create"),
-    # 👉 TELA ÚNICA (Tramitação + Pareceres)
+    # 👉 TELA ÚNICA (Tramitação + Parecer do Relator)
     path("proposicao/<str:proposicao_id>/tramitacoes/nova/", TramitacaoComParecerCreateView.as_view(), name="tramitacao_create"),
+    path("proposicao/<int:proposicao_id>/tramitacoes/<int:t>/", TramitacaoDetailView.as_view(), name="tramitacao_detail"),
     path("proposicao/<int:proposicao_id>/tramitacoes/<int:t>/editar/", TramitacaoUpdateView.as_view(), name="tramitacao_update"),
     path("proposicao/<int:proposicao_id>/tramitacoes/<int:t>/excluir/", TramitacaoDeleteView.as_view(), name="tramitacao_delete"),
     path("tramitacao/<int:pk>/pdf/", TramitacaoPDFView.as_view(), name="tramitacao_pdf"),
+
+    # 👉 Votos vencidos: telas próprias, ligadas a uma tramitação já salva
+    path("tramitacao/<int:tramitacao_id>/votos-vencidos/novo/", ParecerVencidoCreateView.as_view(), name="parecer_vencido_create"),
+    path("tramitacao/<int:tramitacao_id>/votos-vencidos/<int:pk>/editar/", ParecerVencidoUpdateView.as_view(), name="parecer_vencido_update"),
+    path("tramitacao/<int:tramitacao_id>/votos-vencidos/<int:pk>/excluir/", ParecerVencidoDeleteView.as_view(), name="parecer_vencido_delete"),
 
     path("autores/", AutorListView.as_view(), name="autor_list"),
     path("autores/novo/", AutorCreateView.as_view(), name="autor_create"),

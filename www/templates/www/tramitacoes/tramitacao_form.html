@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+    {{ form.media }}
+{% endblock %}
+
 {% block content %}
-<h3>Tramitação</h3>
+<h3>Tramitação – {{ proposicao }}</h3>
 
 <form method="post">
     {% csrf_token %}
@@ -51,8 +55,45 @@
         {% endif %}
     </div>
 
+    <hr>
+    <h5>Parecer do Relator</h5>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Reunião</label>
+            {{ form.reuniao }}
+            {% if form.reuniao.errors %}
+            <div class="text-danger">{{ form.reuniao.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Relator</label>
+            {{ form.relator }}
+            {% if form.relator.errors %}
+            <div class="text-danger">{{ form.relator.errors }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Parecer</label>
+        {{ form.parecer }}
+        {% if form.parecer.errors %}
+        <div class="text-danger">{{ form.parecer.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Texto do Parecer</label>
+        {{ form.texto }}
+        {% if form.texto.errors %}
+        <div class="text-danger">{{ form.texto.errors }}</div>
+        {% endif %}
+    </div>
+
     <button type="submit" class="btn btn-primary">Salvar Tramitação</button>
-    <a href="{% url 'tramitacao_list' proposicao.pk %}" class="btn btn-secondary">
+    <a href="{% url 'tramitacao_detail' proposicao.pk object.pk %}" class="btn btn-secondary">
         Voltar
     </a>
 </form>

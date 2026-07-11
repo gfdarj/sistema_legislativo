@@ -359,31 +359,17 @@ class TramitacaoListView(LoginRequiredMixin, ListView):
         return context
 
 
-# View ÚNICA Tramitacao - Parecer - Parecer vencido
+# View de criação da Tramitação (já com o parecer do relator embutido)
 class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
     template_name = "www/tramitacoes/tramitacao_unica_form.html"
 
     def get(self, request, proposicao_id):
         proposicao = get_object_or_404(Proposicao, pk=proposicao_id)
-
-        # 🔑 DEFAULT TEM QUE SER ZERO
-        qtd_vencidos = int(request.GET.get("vencidos", 0))
-
         tramitacao_form = TramitacaoForm(user=request.user)
-
-        # 🔥 FORMSET SEM PARENT (CRIAÇÃO)
-        VencidosFormSet = formset_factory(
-            ParecerVencidoForm,
-            extra=qtd_vencidos,
-            can_delete=True
-        )
-
-        vencidos_formset = VencidosFormSet(prefix="vencido")
 
         return render(request, self.template_name, {
             "proposicao": proposicao,
             "tramitacao_form": tramitacao_form,
-            "vencidos_formset": vencidos_formset,
         })
 
     @transaction.atomic
@@ -399,23 +385,7 @@ class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
 
         tramitacao_form = TramitacaoForm(request.POST, user=user)
 
-        VencidosFormSet = formset_factory(
-            ParecerVencidoForm,
-            extra=0,
-            can_delete=True
-        )
-        vencidos_formset = VencidosFormSet(
-            request.POST,
-            prefix="vencido"
-        )
-
-        forms_validos = (
-            tramitacao_form.is_valid()
-            and vencidos_formset.is_valid()
-        )
-
-        if forms_validos:
-            # 1️⃣ Salva a tramitação (já com o parecer do relator embutido)
+        if tramitacao_form.is_valid():
             tramitacao = tramitacao_form.save(commit=False)
             tramitacao.proposicao = proposicao
 
@@ -425,81 +395,20 @@ class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
 
             tramitacao.save()
 
-            # 2️⃣ Salva os pareceres vencidos (ignorando os marcados para exclusão
-            #     e os formulários extras deixados em branco)
-            for form in vencidos_formset:
-                if form.cleaned_data.get("DELETE"):
-                    continue
-                if not form.cleaned_data:
-                    continue
+            # Votos vencidos (0 a muitos) são adicionados depois, na tela
+            # de detalhe da tramitação — agora que ela já tem um id salvo.
+            return redirect(
+                "tramitacao_detail",
+                proposicao_id=proposicao.pk,
+                t=tramitacao.pk,
+            )
 
-                parecer_vencido = form.save(commit=False)
-                parecer_vencido.tramitacao = tramitacao
-                parecer_vencido.save()
-
-            return redirect("tramitacao_list", proposicao_id=proposicao.pk)
-
-        # ❌ Algum formulário é inválido: re-renderiza a tela com os erros,
-        #    preservando a quantidade de formulários de votos vencidos enviada.
+        # ❌ Formulário inválido: re-renderiza a tela com os erros.
         return render(request, self.template_name, {
             "proposicao": proposicao,
             "tramitacao_form": tramitacao_form,
-            "vencidos_formset": vencidos_formset,
         })
 
-
-
-class TramitacaoCreateView(LoginRequiredMixin, CreateView):
-    model = Tramitacao
-    form_class = TramitacaoForm
-    template_name = "www/tramitacoes/tramitacao_form.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        # garante que a proposição existe
-        try:
-            self.proposicao = Proposicao.objects.get(
-                pk=kwargs["proposicao_id"]
-            )
-        except Proposicao.DoesNotExist:
-            raise Http404("Proposição não encontrada")
-
-        return super().dispatch(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        # associa corretamente a proposição
-        form.instance.proposicao = self.proposicao
-
-        # 🔒 força comissão do usuário
-        if not self.request.user.is_superuser:
-            form.instance.comissao = (
-                self.request.user.perfil.comissao_padrao
-            )
-
-        return super().form_valid(form)
-
-    def get_initial(self):
-        initial = super().get_initial()
-        initial["comissao"] = self.request.user.perfil.comissao_padrao
-        return initial
-
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["proposicao"] = self.proposicao
-        return context
-
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
-        return kwargs
-
-
-    def get_success_url(self):
-        return reverse_lazy(
-            "tramitacao_list",
-            kwargs={"proposicao_id": self.proposicao.pk}
-        )
 
 
 class TramitacaoUpdateView(LoginRequiredMixin, UpdateView):
@@ -553,8 +462,8 @@ class TramitacaoUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy(
-            "tramitacao_list",
-            kwargs={"proposicao_id": self.proposicao.pk}
+            "tramitacao_detail",
+            kwargs={"proposicao_id": self.proposicao.pk, "t": self.object.pk}
         )
 
 
@@ -600,6 +509,50 @@ class TramitacaoDeleteView(LoginRequiredMixin, DeleteView):
         )
 
 
+class TramitacaoDetailView(LoginRequiredMixin, DetailView):
+    model = Tramitacao
+    template_name = "www/tramitacoes/tramitacao_detail.html"
+    context_object_name = "tramitacao"
+    pk_url_kwarg = "t"  # 👈 id da tramitação
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.proposicao = Proposicao.objects.get(
+                pk=kwargs["proposicao_id"]
+            )
+        except Proposicao.DoesNotExist:
+            raise Http404("Proposição não encontrada")
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return (
+            Tramitacao.objects
+            .select_related("proposicao", "comissao", "relator", "reuniao")
+            .prefetch_related("pareceres_vencidos__relator", "pareceres_vencidos__reuniao")
+        )
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        user = self.request.user
+
+        # 🔐 garante que a tramitação pertence à proposição
+        if obj.proposicao_id != self.proposicao.pk:
+            raise Http404("Tramitação inválida")
+
+        # 🔒 permissão por comissão
+        if not user.is_superuser:
+            if obj.comissao != user.perfil.comissao_padrao:
+                raise Http404("Acesso negado")
+
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["proposicao"] = self.proposicao
+        return context
+
+
 class TramitacaoPDFView(LoginRequiredMixin, View):
     """
     Gera o PDF do parecer da tramitação
@@ -622,6 +575,128 @@ class TramitacaoPDFView(LoginRequiredMixin, View):
 
         return response
 
+
+
+###################################################################################
+
+class ParecerVencidoCreateView(LoginRequiredMixin, CreateView):
+    model = ParecerVencido
+    form_class = ParecerVencidoForm
+    template_name = "www/pareceres_vencidos/parecervencido_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tramitacao = get_object_or_404(
+            Tramitacao, pk=kwargs["tramitacao_id"]
+        )
+        user = request.user
+
+        # 🔒 permissão por comissão
+        if not user.is_superuser:
+            if self.tramitacao.comissao != user.perfil.comissao_padrao:
+                raise Http404("Acesso negado")
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.tramitacao = self.tramitacao
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tramitacao"] = self.tramitacao
+        context["proposicao"] = self.tramitacao.proposicao
+        return context
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "tramitacao_detail",
+            kwargs={
+                "proposicao_id": self.tramitacao.proposicao_id,
+                "t": self.tramitacao.pk,
+            }
+        )
+
+
+class ParecerVencidoUpdateView(LoginRequiredMixin, UpdateView):
+    model = ParecerVencido
+    form_class = ParecerVencidoForm
+    template_name = "www/pareceres_vencidos/parecervencido_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tramitacao = get_object_or_404(
+            Tramitacao, pk=kwargs["tramitacao_id"]
+        )
+        user = request.user
+
+        if not user.is_superuser:
+            if self.tramitacao.comissao != user.perfil.comissao_padrao:
+                raise Http404("Acesso negado")
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+
+        # 🔐 garante que o voto vencido pertence à tramitação da URL
+        if obj.tramitacao_id != self.tramitacao.pk:
+            raise Http404("Parecer vencido inválido")
+
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tramitacao"] = self.tramitacao
+        context["proposicao"] = self.tramitacao.proposicao
+        return context
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "tramitacao_detail",
+            kwargs={
+                "proposicao_id": self.tramitacao.proposicao_id,
+                "t": self.tramitacao.pk,
+            }
+        )
+
+
+class ParecerVencidoDeleteView(LoginRequiredMixin, DeleteView):
+    model = ParecerVencido
+    template_name = "www/pareceres_vencidos/parecervencido_confirm_delete.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tramitacao = get_object_or_404(
+            Tramitacao, pk=kwargs["tramitacao_id"]
+        )
+        user = request.user
+
+        if not user.is_superuser:
+            if self.tramitacao.comissao != user.perfil.comissao_padrao:
+                raise Http404("Acesso negado")
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+
+        if obj.tramitacao_id != self.tramitacao.pk:
+            raise Http404("Parecer vencido inválido")
+
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tramitacao"] = self.tramitacao
+        context["proposicao"] = self.tramitacao.proposicao
+        return context
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "tramitacao_detail",
+            kwargs={
+                "proposicao_id": self.tramitacao.proposicao_id,
+                "t": self.tramitacao.pk,
+            }
+        )
 
 
 ###################################################################################

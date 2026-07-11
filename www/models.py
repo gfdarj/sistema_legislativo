@@ -229,6 +229,17 @@ class Tramitacao(models.Model):
     def tem_parecer_relator(self):
         return self.relator_id is not None
 
+    def save(self, *args, **kwargs):
+        # A data de apresentação do parecer do relator é a própria
+        # data da reunião em que ele foi apresentado.
+        if self.reuniao_id:
+            self.data_apresentacao = self.reuniao.data
+
+        if self.parecer:
+            self.parecer = self.parecer.upper()
+
+        super().save(*args, **kwargs)
+
 
 #########################################################################################
 
@@ -254,6 +265,11 @@ class ParecerVencido(models.Model):
 
     def __str__(self):
         return f"Voto vencido de {self.relator} em {self.tramitacao}"
+
+    def save(self, *args, **kwargs):
+        if self.parecer:
+            self.parecer = self.parecer.upper()
+        super().save(*args, **kwargs)
 
 
 #########################################################################################

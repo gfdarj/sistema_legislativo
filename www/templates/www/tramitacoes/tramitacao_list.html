@@ -22,8 +22,9 @@
         <tr>
             <th style="width: 110px;">Data</th>
             <th>Comissão</th>
+            <th>Reunião</th>
             <th>Relator</th>
-            <th>Descrição</th>
+            <th>Parecer</th>
             <th style="width: 150px;">Ações</th>
         </tr>
     </thead>
@@ -32,11 +33,12 @@
         <tr>
             <td>{{ t.data_entrada|date:"d/m/Y" }}</td>
             <td>{{ t.comissao }}</td>
+            <td>{{ t.reuniao|default:"—" }}</td>
             <td>{{ t.relator_atual|default:"—" }}</td>
-            <td>{{ t.observacao }}</td>
+            <td>{{ t.parecer|default:"—" }}</td>
             <td>
-                <a href="{% url 'tramitacao_update' proposicao.pk t.id %}">
-                    Editar
+                <a href="{% url 'tramitacao_detail' proposicao.pk t.id %}">
+                    Detalhes
                 </a>
                 &nbsp;|&nbsp;
                 <a href="{% url 'tramitacao_delete' proposicao.pk t.id %}">
@@ -46,7 +48,7 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="5" class="text-center">
+            <td colspan="6" class="text-center">
                 Nenhuma tramitação registrada.
             </td>
         </tr>
