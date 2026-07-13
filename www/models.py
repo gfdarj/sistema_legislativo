@@ -210,7 +210,13 @@ class Tramitacao(models.Model):
     )
     parecer = models.CharField(max_length=200, blank=True)
     texto = CKEditor5Field(blank=True)
-    data_apresentacao = models.DateField(null=True, blank=True)
+
+    # 🔹 Indica que a proposição terá parecer(es) em separado (vencido),
+    # pois algum membro pediu vista do processo.
+    pedido_vista = models.BooleanField(
+        default=False,
+        verbose_name="Pedido de Vista"
+    )
 
     class Meta:
         ordering = ["data_entrada"]
@@ -230,11 +236,6 @@ class Tramitacao(models.Model):
         return self.relator_id is not None
 
     def save(self, *args, **kwargs):
-        # A data de apresentação do parecer do relator é a própria
-        # data da reunião em que ele foi apresentado.
-        if self.reuniao_id:
-            self.data_apresentacao = self.reuniao.data
-
         if self.parecer:
             self.parecer = self.parecer.upper()
 

@@ -91,6 +91,7 @@ class TramitacaoForm(forms.ModelForm):
             "relator",
             "parecer",
             "texto",
+            "pedido_vista",
         ]
         widgets = {
             "comissao": forms.Select(attrs={"class": "form-select"}),
@@ -106,6 +107,7 @@ class TramitacaoForm(forms.ModelForm):
             "relator": forms.Select(attrs={"class": "form-select"}),
             "parecer": forms.TextInput(attrs={"class": "form-control"}),
             "texto": CKEditor5Widget(config_name="default"),
+            "pedido_vista": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
     def __init__(self, *args, **kwargs):

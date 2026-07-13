@@ -55,6 +55,16 @@
         {% endif %}
     </div>
 
+    <div class="form-check mb-3">
+        {{ form.pedido_vista }}
+        <label class="form-check-label" for="{{ form.pedido_vista.id_for_label }}">
+            Pedido de Vista (haverá parecer(es) em separado / vencido)
+        </label>
+        {% if form.pedido_vista.errors %}
+        <div class="text-danger">{{ form.pedido_vista.errors }}</div>
+        {% endif %}
+    </div>
+
     <hr>
     <h5>Parecer do Relator</h5>
 

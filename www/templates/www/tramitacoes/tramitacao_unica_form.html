@@ -55,6 +55,13 @@
                 {{ tramitacao_form.observacao }}
             </div>
 
+            <div class="form-check mb-3">
+                {{ tramitacao_form.pedido_vista }}
+                <label class="form-check-label" for="{{ tramitacao_form.pedido_vista.id_for_label }}">
+                    Pedido de Vista (haverá parecer(es) em separado / vencido)
+                </label>
+            </div>
+
             <hr>
 
             <div class="row">

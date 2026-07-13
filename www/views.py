@@ -253,6 +253,82 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 ###################################################################################
 
 
+class TramitacoesPainelView(LoginRequiredMixin, ListView):
+    template_name = "www/tramitacoes/tramitacoes_painel.html"
+    context_object_name = "proposicoes"
+    paginate_by = 25
+
+    def _get_filtros(self):
+        """Calcula (uma única vez) comissão/reunião selecionadas a partir do GET."""
+        if hasattr(self, "_filtros_cache"):
+            return self._filtros_cache
+
+        user = self.request.user
+
+        # 🔒 Comissão: vem do filtro selecionado, ou por padrão a do usuário
+        comissao_id = self.request.GET.get("comissao")
+        if comissao_id:
+            comissao_selecionada = Comissao.objects.filter(pk=comissao_id).first()
+        elif not user.is_superuser:
+            comissao_selecionada = user.perfil.comissao_padrao
+        else:
+            comissao_selecionada = None
+
+        # 🔹 Reuniões do ano corrente, restritas à comissão selecionada (se houver)
+        ano_atual = now().year
+        reunioes_qs = Reuniao.objects.filter(ano=ano_atual).select_related("comissao")
+        if comissao_selecionada:
+            reunioes_qs = reunioes_qs.filter(comissao=comissao_selecionada)
+        reunioes_qs = reunioes_qs.order_by("comissao__sigla", "-data")
+
+        reuniao_id = self.request.GET.get("reuniao")
+        reuniao_selecionada = None
+        if reuniao_id:
+            reuniao_selecionada = reunioes_qs.filter(pk=reuniao_id).first()
+
+        self._filtros_cache = {
+            "ano_atual": ano_atual,
+            "comissao_selecionada": comissao_selecionada,
+            "reunioes_qs": reunioes_qs,
+            "reuniao_selecionada": reuniao_selecionada,
+        }
+        return self._filtros_cache
+
+    def get_queryset(self):
+        filtros = self._get_filtros()
+
+        # 🔹 Proposições cuja tramitação bate com os filtros escolhidos
+        proposicoes = Proposicao.objects.select_related("tipo")
+
+        if filtros["comissao_selecionada"]:
+            proposicoes = proposicoes.filter(
+                tramitacoes__comissao=filtros["comissao_selecionada"]
+            )
+
+        if filtros["reuniao_selecionada"]:
+            proposicoes = proposicoes.filter(
+                tramitacoes__reuniao=filtros["reuniao_selecionada"]
+            )
+
+        return proposicoes.distinct().order_by("-data_publicacao")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        filtros = self._get_filtros()
+
+        context.update({
+            "comissoes": Comissao.objects.filter(ativa=True),
+            "reunioes": filtros["reunioes_qs"],
+            "comissao_selecionada": filtros["comissao_selecionada"],
+            "reuniao_selecionada": filtros["reuniao_selecionada"],
+            "ano_atual": filtros["ano_atual"],
+        })
+        return context
+
+
+###################################################################################
+
+
 class AutorListView(LoginRequiredMixin, ListView):
     model = Autor
     template_name = "www/autores/autor_list.html"

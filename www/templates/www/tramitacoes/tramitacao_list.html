@@ -25,6 +25,7 @@
             <th>Reunião</th>
             <th>Relator</th>
             <th>Parecer</th>
+            <th style="width: 110px;">Pedido de Vista</th>
             <th style="width: 150px;">Ações</th>
         </tr>
     </thead>
@@ -36,6 +37,13 @@
             <td>{{ t.reuniao|default:"—" }}</td>
             <td>{{ t.relator_atual|default:"—" }}</td>
             <td>{{ t.parecer|default:"—" }}</td>
+            <td class="text-center">
+                {% if t.pedido_vista %}
+                    <span class="badge bg-warning text-dark">Sim</span>
+                {% else %}
+                    <span class="badge bg-secondary">Não</span>
+                {% endif %}
+            </td>
             <td>
                 <a href="{% url 'tramitacao_detail' proposicao.pk t.id %}">
                     Detalhes
@@ -48,7 +56,7 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="6" class="text-center">
+            <td colspan="7" class="text-center">
                 Nenhuma tramitação registrada.
             </td>
         </tr>
