@@ -12,9 +12,9 @@
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-3">
         <select name="tipo" class="form-select">
-            <option value="">Tipo</option>
+            <option value="" {% if tipo_selecionado == "" %}selected{% endif %}>Tipo</option>
             {% for t in tipos %}
-                <option value="{{ t.id }}" {% if request.GET.tipo == t.id|stringformat:"s" %}selected{% endif %}>
+                <option value="{{ t.id }}" {% if tipo_selecionado == t.id|stringformat:"s" %}selected{% endif %}>
                     {{ t.nome }}
                 </option>
             {% endfor %}
@@ -53,7 +53,7 @@
             <option value="">Comissão</option>
             {% for c in comissoes %}
                 <option value="{{ c.id }}"
-                  {% if request.GET.comissao == c.id|stringformat:"s" %}selected{% endif %}>
+                  {% if comissao_selecionada == c.id|stringformat:"s" %}selected{% endif %}>
                     {{ c.nome }}
                 </option>
             {% endfor %}

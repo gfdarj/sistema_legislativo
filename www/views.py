@@ -32,6 +32,33 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
     template_name = "www/proposicao_list.html"
     paginate_by = 20
 
+    def _tipo_selecionado(self):
+        """Tipo escolhido no filtro; por padrão, 'Projeto Lei' (PL)."""
+        if hasattr(self, "_tipo_cache"):
+            return self._tipo_cache
+
+        tipo = self.request.GET.get("tipo")
+        if tipo is None:
+            tipo_pl = TipoProposicao.objects.filter(sigla="PL").first()
+            tipo = str(tipo_pl.id) if tipo_pl else None
+
+        self._tipo_cache = tipo
+        return tipo
+
+    def _comissao_selecionada(self):
+        """Comissão escolhida no filtro; por padrão, a comissão do usuário."""
+        if hasattr(self, "_comissao_cache"):
+            return self._comissao_cache
+
+        comissao = self.request.GET.get("comissao")
+        if comissao is None:
+            user = self.request.user
+            if getattr(user, "perfil", None) and user.perfil.comissao_padrao_id:
+                comissao = str(user.perfil.comissao_padrao_id)
+
+        self._comissao_cache = comissao
+        return comissao
+
     def get_queryset(self):
         qs = (
             Proposicao.objects
@@ -62,10 +89,10 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
                 return qs.none()
 
         # 🔍 Filtros da tela
-        tipo = self.request.GET.get("tipo")
+        tipo = self._tipo_selecionado()
         numero = self.request.GET.get("numero")
         autor = self.request.GET.get("autor")
-        comissao_filtro = self.request.GET.get("comissao")
+        comissao_filtro = self._comissao_selecionada()
         aguardando_parecer = self.request.GET.get("aguardando_parecer")
 
         if tipo:
@@ -104,6 +131,8 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
         context["querystring"] = params.urlencode()
 
         context["tipos"] = TipoProposicao.objects.filter(ativo=True)
+        context["tipo_selecionado"] = self._tipo_selecionado()
+        context["comissao_selecionada"] = self._comissao_selecionada()
         context["autores"] = Autor.objects.filter(ativo=True).order_by("nome")
 
         # Combo de comissão (informativo)
@@ -265,18 +294,19 @@ class TramitacoesPainelView(LoginRequiredMixin, ListView):
 
         user = self.request.user
 
-        # 🔒 Comissão: vem do filtro selecionado, ou por padrão a do usuário
+        # 🔒 Comissão: vem do filtro selecionado, ou por padrão a comissão
+        # registrada para o usuário (mesmo se ele for superusuário)
         comissao_id = self.request.GET.get("comissao")
         if comissao_id:
             comissao_selecionada = Comissao.objects.filter(pk=comissao_id).first()
-        elif not user.is_superuser:
+        elif getattr(user, "perfil", None) and user.perfil.comissao_padrao_id:
             comissao_selecionada = user.perfil.comissao_padrao
         else:
             comissao_selecionada = None
 
         # 🔹 Reuniões do ano corrente, restritas à comissão selecionada (se houver)
         ano_atual = now().year
-        reunioes_qs = Reuniao.objects.filter(ano=ano_atual).select_related("comissao")
+        reunioes_qs = Reuniao.objects.filter(data__year=ano_atual).select_related("comissao")
         if comissao_selecionada:
             reunioes_qs = reunioes_qs.filter(comissao=comissao_selecionada)
         reunioes_qs = reunioes_qs.order_by("comissao__sigla", "-data")
@@ -297,8 +327,12 @@ class TramitacoesPainelView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         filtros = self._get_filtros()
 
-        # 🔹 Proposições cuja tramitação bate com os filtros escolhidos
-        proposicoes = Proposicao.objects.select_related("tipo")
+        # 🔹 Só entram proposições que já têm alguma tramitação cadastrada
+        proposicoes = (
+            Proposicao.objects
+            .select_related("tipo")
+            .filter(tramitacoes__isnull=False)
+        )
 
         if filtros["comissao_selecionada"]:
             proposicoes = proposicoes.filter(
@@ -784,9 +818,52 @@ class ReuniaoListView(LoginRequiredMixin, ListView):
     context_object_name = "reunioes"
     paginate_by = 10
 
+    def _comissao_selecionada(self):
+        if hasattr(self, "_comissao_cache"):
+            return self._comissao_cache
+
+        comissao = self.request.GET.get("comissao")
+        if comissao is None:
+            user = self.request.user
+            if getattr(user, "perfil", None) and user.perfil.comissao_padrao_id:
+                comissao = str(user.perfil.comissao_padrao_id)
+
+        self._comissao_cache = comissao
+        return comissao
+
+    def _ano_selecionado(self):
+        return self.request.GET.get("ano") or ""
+
     def get_queryset(self):
-        qs = super().get_queryset()
-        return qs.select_related("comissao").order_by("-ano", "-data", "-hora")
+        qs = super().get_queryset().select_related("comissao")
+
+        ano = self._ano_selecionado()
+        if ano:
+            qs = qs.filter(data__year=ano)
+
+        comissao = self._comissao_selecionada()
+        if comissao:
+            qs = qs.filter(comissao_id=comissao)
+
+        return qs.order_by("-data", "-hora")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        context["querystring"] = params.urlencode()
+
+        context["comissoes"] = Comissao.objects.filter(ativa=True)
+        context["comissao_selecionada"] = self._comissao_selecionada()
+        context["ano_selecionado"] = self._ano_selecionado()
+
+        context["anos"] = (
+            Reuniao.objects
+            .dates("data", "year", order="DESC")
+        )
+
+        return context
 
 
 class ReuniaoCreateView(LoginRequiredMixin, CreateView):
@@ -794,6 +871,13 @@ class ReuniaoCreateView(LoginRequiredMixin, CreateView):
     form_class = ReuniaoForm
     template_name = "www/reunioes/reuniao_form.html"
     success_url = reverse_lazy("reuniao_list")
+
+    def get_initial(self):
+        initial = super().get_initial()
+        user = self.request.user
+        if getattr(user, "perfil", None) and user.perfil.comissao_padrao_id:
+            initial["comissao"] = user.perfil.comissao_padrao_id
+        return initial
 
 
 class ReuniaoUpdateView(LoginRequiredMixin, UpdateView):

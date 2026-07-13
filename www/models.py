@@ -159,8 +159,7 @@ class Reuniao(models.Model):
 
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
 
-    numero = models.PositiveIntegerField()
-    ano = models.PositiveIntegerField()
+    numero = models.PositiveIntegerField(verbose_name="Ordem")
 
     data = models.DateField()
     hora = models.TimeField()
@@ -168,8 +167,30 @@ class Reuniao(models.Model):
     pauta = models.TextField(blank=True)
     ata = models.TextField(blank=True)
 
-    class Meta:
-        unique_together = ("comissao", "numero", "ano")
+    # 🔹 Controle de edital
+    data_edital_do = models.DateField(null=True, blank=True, verbose_name="Data do Edital")
+    tem_edital_assinado = models.BooleanField(null=True, blank=True, verbose_name="Edital Assinado")
+
+    # 🔹 Controle de presença e ata
+    tem_presenca_assinada = models.BooleanField(null=True, blank=True, verbose_name="Presença Assinada")
+    tem_ata_assinada = models.BooleanField(null=True, blank=True, verbose_name="Ata Assinada")
+    data_ata_do = models.DateField(null=True, blank=True, verbose_name="Data da Ata")
+
+    # 🔹 Controle de parecer
+    tem_parecer_assinado = models.BooleanField(null=True, blank=True, verbose_name="Parecer Assinado")
+
+    # 🔹 Controle de deliberação
+    tem_deliberacao = models.BooleanField(null=True, blank=True, verbose_name="Tem Deliberação")
+    tem_deliberacao_assinada = models.BooleanField(null=True, blank=True, verbose_name="Deliberação Assinada")
+
+    # 🔹 Controle de conclusão
+    tem_conclusao = models.BooleanField(null=True, blank=True, verbose_name="Tem Conclusão")
+    tem_conclusao_assinada = models.BooleanField(null=True, blank=True, verbose_name="Conclusão Assinada")
+
+    @property
+    def ano(self):
+        """Ano da reunião, derivado da própria data."""
+        return self.data.year if self.data else None
 
     @property
     def descricao(self):

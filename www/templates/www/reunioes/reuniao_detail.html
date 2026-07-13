@@ -12,7 +12,7 @@
         <strong>Tipo:</strong> {{ reuniao.get_tipo_display }}
     </div>
     <div class="col-md-4 mb-3">
-        <strong>Número:</strong> {{ reuniao.numero }}/{{ reuniao.ano }}
+        <strong>Ordem:</strong> {{ reuniao.numero }}/{{ reuniao.ano }}
     </div>
     <div class="col-md-4 mb-3">
         <strong>Data:</strong> {{ reuniao.data|date:"d/m/Y" }}
@@ -31,6 +31,61 @@
     <strong>Ata</strong>
     <div class="border rounded p-2">
         {{ reuniao.ata|default:"—"|linebreaks }}
+    </div>
+</div>
+
+<hr>
+<h5>Edital</h5>
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <strong>Data do Edital:</strong> {{ reuniao.data_edital_do|date:"d/m/Y"|default:"—" }}
+    </div>
+    <div class="col-md-4 mb-3">
+        <strong>Edital Assinado:</strong> {{ reuniao.tem_edital_assinado|yesno:"Sim,Não,—" }}
+    </div>
+</div>
+
+<hr>
+<h5>Presença e Ata</h5>
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <strong>Presença Assinada:</strong> {{ reuniao.tem_presenca_assinada|yesno:"Sim,Não,—" }}
+    </div>
+    <div class="col-md-4 mb-3">
+        <strong>Ata Assinada:</strong> {{ reuniao.tem_ata_assinada|yesno:"Sim,Não,—" }}
+    </div>
+    <div class="col-md-4 mb-3">
+        <strong>Data da Ata:</strong> {{ reuniao.data_ata_do|date:"d/m/Y"|default:"—" }}
+    </div>
+</div>
+
+<hr>
+<h5>Parecer</h5>
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <strong>Parecer Assinado:</strong> {{ reuniao.tem_parecer_assinado|yesno:"Sim,Não,—" }}
+    </div>
+</div>
+
+<hr>
+<h5>Deliberação</h5>
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <strong>Tem Deliberação:</strong> {{ reuniao.tem_deliberacao|yesno:"Sim,Não,—" }}
+    </div>
+    <div class="col-md-4 mb-3">
+        <strong>Deliberação Assinada:</strong> {{ reuniao.tem_deliberacao_assinada|yesno:"Sim,Não,—" }}
+    </div>
+</div>
+
+<hr>
+<h5>Conclusão</h5>
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <strong>Tem Conclusão:</strong> {{ reuniao.tem_conclusao|yesno:"Sim,Não,—" }}
+    </div>
+    <div class="col-md-4 mb-3">
+        <strong>Conclusão Assinada:</strong> {{ reuniao.tem_conclusao_assinada|yesno:"Sim,Não,—" }}
     </div>
 </div>
 

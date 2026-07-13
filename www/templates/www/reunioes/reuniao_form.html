@@ -12,23 +12,18 @@
             {{ form.comissao }}
         </div>
 
-        <div class="col-md-6 mb-3">
+        <div class="col-md-2 mb-3">
+            <label class="form-label">Ordem</label>
+            {{ form.numero }}
+        </div>
+
+        <div class="col-md-4 mb-3">
             <label class="form-label">Tipo</label>
             {{ form.tipo }}
         </div>
     </div>
 
     <div class="row">
-        <div class="col-md-3 mb-3">
-            <label class="form-label">Número</label>
-            {{ form.numero }}
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <label class="form-label">Ano</label>
-            {{ form.ano }}
-        </div>
-
         <div class="col-md-3 mb-3">
             <label class="form-label">Data</label>
             {{ form.data }}
@@ -48,6 +43,71 @@
     <div class="mb-3">
         <label class="form-label">Ata</label>
         {{ form.ata }}
+    </div>
+
+    <hr>
+    <h5>Edital</h5>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Data do Edital</label>
+            {{ form.data_edital_do }}
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Edital Assinado</label>
+            {{ form.tem_edital_assinado }}
+        </div>
+    </div>
+
+    <hr>
+    <h5>Presença e Ata</h5>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Presença Assinada</label>
+            {{ form.tem_presenca_assinada }}
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Ata Assinada</label>
+            {{ form.tem_ata_assinada }}
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Data da Ata</label>
+            {{ form.data_ata_do }}
+        </div>
+    </div>
+
+    <hr>
+    <h5>Parecer</h5>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Parecer Assinado</label>
+            {{ form.tem_parecer_assinado }}
+        </div>
+    </div>
+
+    <hr>
+    <h5>Deliberação</h5>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Tem Deliberação</label>
+            {{ form.tem_deliberacao }}
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Deliberação Assinada</label>
+            {{ form.tem_deliberacao_assinada }}
+        </div>
+    </div>
+
+    <hr>
+    <h5>Conclusão</h5>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Tem Conclusão</label>
+            {{ form.tem_conclusao }}
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Conclusão Assinada</label>
+            {{ form.tem_conclusao_assinada }}
+        </div>
     </div>
 
     {% if form.errors %}

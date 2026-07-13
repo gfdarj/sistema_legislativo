@@ -7,6 +7,37 @@
     Nova Reunião
 </a>
 
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <select name="ano" class="form-select">
+            <option value="" {% if ano_selecionado == "" %}selected{% endif %}>Ano</option>
+            {% for a in anos %}
+                <option value="{{ a }}" {% if ano_selecionado == a|stringformat:"s" %}selected{% endif %}>
+                    {{ a }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <select name="comissao" class="form-select">
+            <option value="">Comissão</option>
+            {% for c in comissoes %}
+                <option value="{{ c.id }}" {% if comissao_selecionada == c.id|stringformat:"s" %}selected{% endif %}>
+                    {{ c.sigla }} – {{ c.nome }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100">Filtrar</button>
+    </div>
+    <div class="col-md-2">
+        <a href="{% url 'reuniao_list' %}" class="btn btn-outline-secondary w-100">Limpar</a>
+    </div>
+</form>
+
 <table class="table table-striped table-hover">
     <thead>
         <tr>
@@ -15,6 +46,7 @@
             <th>Comissão</th>
             <th>Data</th>
             <th>Hora</th>
+            <th>Documentos</th>
             <th></th>
         </tr>
     </thead>
@@ -26,6 +58,26 @@
             <td>{{ reuniao.comissao }}</td>
             <td>{{ reuniao.data|date:"d/m/Y" }}</td>
             <td>{{ reuniao.hora|time:"H:i" }}</td>
+            <td>
+                <span class="badge {% if reuniao.tem_edital_assinado %}bg-success{% elif reuniao.tem_edital_assinado is False %}bg-danger{% else %}bg-secondary{% endif %}" title="Edital Assinado">
+                    Edital
+                </span>
+                <span class="badge {% if reuniao.tem_presenca_assinada %}bg-success{% elif reuniao.tem_presenca_assinada is False %}bg-danger{% else %}bg-secondary{% endif %}" title="Presença Assinada">
+                    Presença
+                </span>
+                <span class="badge {% if reuniao.tem_ata_assinada %}bg-success{% elif reuniao.tem_ata_assinada is False %}bg-danger{% else %}bg-secondary{% endif %}" title="Ata Assinada">
+                    Ata
+                </span>
+                <span class="badge {% if reuniao.tem_parecer_assinado %}bg-success{% elif reuniao.tem_parecer_assinado is False %}bg-danger{% else %}bg-secondary{% endif %}" title="Parecer Assinado">
+                    Parecer
+                </span>
+                <span class="badge {% if reuniao.tem_deliberacao_assinada %}bg-success{% elif reuniao.tem_deliberacao_assinada is False %}bg-danger{% else %}bg-secondary{% endif %}" title="Deliberação Assinada">
+                    Deliberação
+                </span>
+                <span class="badge {% if reuniao.tem_conclusao_assinada %}bg-success{% elif reuniao.tem_conclusao_assinada is False %}bg-danger{% else %}bg-secondary{% endif %}" title="Conclusão Assinada">
+                    Conclusão
+                </span>
+            </td>
             <td>
                 <a href="{% url 'reuniao_detail' reuniao.pk %}">
                     Ver
@@ -42,11 +94,49 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="6" class="text-center">
+            <td colspan="7" class="text-center">
                 Nenhuma reunião cadastrada.
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
+{% if is_paginated %}
+<nav aria-label="Paginação">
+  <ul class="pagination justify-content-center">
+
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page=1{% if querystring %}&{{ querystring }}{% endif %}">« Primeira</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">‹ Anterior</a>
+      </li>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if num >= page_obj.number|add:-3 and num <= page_obj.number|add:3 %}
+        {% if page_obj.number == num %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% else %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}">{{ num }}</a>
+          </li>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">Próxima ›</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if querystring %}&{{ querystring }}{% endif %}">Última »</a>
+      </li>
+    {% endif %}
+
+  </ul>
+</nav>
+{% endif %}
 {% endblock %}

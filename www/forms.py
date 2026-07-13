@@ -4,6 +4,18 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 from www.models import Proposicao, Tramitacao, Autor, Reuniao, ParecerVencido
 
 
+class NullBooleanSelectNA(forms.NullBooleanSelect):
+    """Combo Sim/Não/N-A (em vez do 'Unknown' padrão do Django)."""
+
+    def __init__(self, attrs=None):
+        super().__init__(attrs)
+        self.choices = (
+            ("unknown", "N/A"),
+            ("true", "Sim"),
+            ("false", "Não"),
+        )
+
+
 class TesteCKForm(forms.Form):
     texto = forms.CharField(widget=CKEditor5Widget())
 
@@ -151,11 +163,20 @@ class ReuniaoForm(forms.ModelForm):
             "comissao",
             "tipo",
             "numero",
-            "ano",
             "data",
             "hora",
             "pauta",
             "ata",
+            "data_edital_do",
+            "tem_edital_assinado",
+            "tem_presenca_assinada",
+            "tem_ata_assinada",
+            "data_ata_do",
+            "tem_parecer_assinado",
+            "tem_deliberacao",
+            "tem_deliberacao_assinada",
+            "tem_conclusao",
+            "tem_conclusao_assinada",
         ]
         widgets = {
             "data": forms.DateInput(
@@ -170,6 +191,20 @@ class ReuniaoForm(forms.ModelForm):
             "ata": forms.Textarea(
                 attrs={"rows": 2, "class": "form-control"}
             ),
+            "data_edital_do": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"}
+            ),
+            "data_ata_do": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"}
+            ),
+            "tem_edital_assinado": NullBooleanSelectNA(),
+            "tem_presenca_assinada": NullBooleanSelectNA(),
+            "tem_ata_assinada": NullBooleanSelectNA(),
+            "tem_parecer_assinado": NullBooleanSelectNA(),
+            "tem_deliberacao": NullBooleanSelectNA(),
+            "tem_deliberacao_assinada": NullBooleanSelectNA(),
+            "tem_conclusao": NullBooleanSelectNA(),
+            "tem_conclusao_assinada": NullBooleanSelectNA(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -182,21 +217,33 @@ class ReuniaoForm(forms.ModelForm):
             if "class" in widget.attrs:
                 continue
 
-            if widget.__class__.__name__ == "Select":
+            if "Select" in widget.__class__.__name__:
                 widget.attrs["class"] = "form-select"
             else:
                 widget.attrs["class"] = "form-control"
 
     def clean(self):
         cleaned_data = super().clean()
+        comissao = cleaned_data.get("comissao")
+        numero = cleaned_data.get("numero")
         data = cleaned_data.get("data")
-        ano = cleaned_data.get("ano")
 
-        if data and ano and data.year != ano:
-            self.add_error(
-                "ano",
-                "O ano deve ser o mesmo da data da reunião."
+        # 🔒 A ordem não pode se repetir dentro da mesma comissão no mesmo ano
+        if comissao and numero and data:
+            qs = Reuniao.objects.filter(
+                comissao=comissao,
+                numero=numero,
+                data__year=data.year,
             )
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+
+            if qs.exists():
+                self.add_error(
+                    "numero",
+                    f"Já existe uma reunião com essa ordem em {data.year} "
+                    f"para essa comissão."
+                )
 
         return cleaned_data
 
