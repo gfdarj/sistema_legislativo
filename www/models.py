@@ -147,8 +147,8 @@ class Proposicao(models.Model):
 class Reuniao(models.Model):
 
     TIPO_CHOICES = [
-        ("ORDINARIA", "Ordinária"),
-        ("EXTRAORDINARIA", "Extraordinária"),
+        ("ORDINÁRIA", "Ordinária"),
+        ("EXTRAORDINÁRIA", "Extraordinária"),
     ]
 
     comissao = models.ForeignKey(
@@ -197,6 +197,14 @@ class Reuniao(models.Model):
         return (
             f"{obter_ordinal(self.numero, feminino=True)} "
             f"reunião {self.tipo} de {self.ano}"
+        )
+
+    @property
+    def descricao_combo(self):
+        """Formato usado nas combos: 1ª Reunião EXTRAORDINÁRIA (SIGLA dd/mm/aaaa)."""
+        return (
+            f"{obter_ordinal(self.numero, feminino=True)} Reunião {self.tipo} "
+            f"({self.comissao.sigla} {self.data.strftime('%d/%m/%Y')})"
         )
 
     def __str__(self):

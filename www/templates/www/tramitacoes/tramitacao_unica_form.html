@@ -68,6 +68,9 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Reunião</label>
                     {{ tramitacao_form.reuniao }}
+                    {% if tramitacao_form.reuniao.errors %}
+                    <div class="text-danger">{{ tramitacao_form.reuniao.errors }}</div>
+                    {% endif %}
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -104,5 +107,35 @@
     </div>
 
 </form>
+
+<script>
+(function () {
+    const comissaoSelect = document.getElementById("id_comissao");
+    const reuniaoSelect = document.getElementById("id_reuniao");
+    if (!comissaoSelect || !reuniaoSelect) return;
+
+    function filtrarReunioes() {
+        const comissao = comissaoSelect.value;
+
+        for (const opt of reuniaoSelect.options) {
+            if (!opt.value) {            // opção vazia ("---------")
+                opt.hidden = false;
+                continue;
+            }
+            const pertence = !comissao || opt.dataset.comissao === comissao;
+            opt.hidden = !pertence;
+            opt.disabled = !pertence;
+
+            // limpa seleção que ficou inválida após trocar a comissão
+            if (opt.selected && !pertence) {
+                reuniaoSelect.value = "";
+            }
+        }
+    }
+
+    comissaoSelect.addEventListener("change", filtrarReunioes);
+    filtrarReunioes();  // aplica já no carregamento (comissão pré-selecionada)
+})();
+</script>
 
 {% endblock %}

@@ -78,17 +78,28 @@ class AutorForm(forms.ModelForm):
         }
 
 
+class ReuniaoSelect(forms.Select):
+    """Select de Reunião com data-comissao em cada opção (para filtragem via JS)."""
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        instance = getattr(value, "instance", None)
+        if instance is not None:
+            option["attrs"]["data-comissao"] = str(instance.comissao_id)
+        return option
+
+
 class ReuniaoChoiceField(forms.ModelChoiceField):
-    """Combo de Reunião mostrando também a sigla da comissão."""
+    """Combo de Reunião no formato: 1ª Reunião EXTRAORDINÁRIA (SIGLA dd/mm/aaaa)."""
 
     def label_from_instance(self, obj):
-        return f"[{obj.comissao.sigla}] {obj}"
+        return obj.descricao_combo
 
 
 class TramitacaoForm(forms.ModelForm):
     reuniao = ReuniaoChoiceField(
         queryset=Reuniao.objects.select_related("comissao"),
-        widget=forms.Select(attrs={"class": "form-select"}),
+        widget=ReuniaoSelect(attrs={"class": "form-select"}),
         required=False,
     )
 
@@ -128,6 +139,20 @@ class TramitacaoForm(forms.ModelForm):
 
         if user and hasattr(user, "perfil") and user.perfil.comissao_padrao:
             self.fields["comissao"].initial = user.perfil.comissao_padrao
+
+    def clean(self):
+        cleaned_data = super().clean()
+        comissao = cleaned_data.get("comissao")
+        reuniao = cleaned_data.get("reuniao")
+
+        # 🔒 A reunião escolhida deve pertencer à comissão selecionada
+        if comissao and reuniao and reuniao.comissao_id != comissao.id:
+            self.add_error(
+                "reuniao",
+                "A reunião selecionada não pertence à comissão escolhida."
+            )
+
+        return cleaned_data
 
 
 class ParecerVencidoForm(forms.ModelForm):

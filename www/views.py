@@ -77,13 +77,18 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
 
         user = self.request.user
 
-        # 🔒 Restrição por comissão (baseada na ÚLTIMA tramitação)
+        # 🔒 Restrição por comissão (baseada na ÚLTIMA tramitação).
+        # Proposições SEM nenhuma tramitação também ficam visíveis,
+        # senão ninguém conseguiria registrar a primeira tramitação.
         if not user.is_superuser:
             try:
                 comissao_usuario = user.perfil.comissao_padrao
                 qs = qs.filter(
-                    tramitacoes__data_entrada=models.F("ultima_data"),
-                    tramitacoes__comissao=comissao_usuario,
+                    Q(
+                        tramitacoes__data_entrada=models.F("ultima_data"),
+                        tramitacoes__comissao=comissao_usuario,
+                    )
+                    | Q(tramitacoes__isnull=True)
                 )
             except Exception:
                 return qs.none()
@@ -109,8 +114,11 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
 
         if comissao_filtro:
             qs = qs.filter(
-                tramitacoes__data_entrada=models.F("ultima_data"),
-                tramitacoes__comissao_id=comissao_filtro
+                Q(
+                    tramitacoes__data_entrada=models.F("ultima_data"),
+                    tramitacoes__comissao_id=comissao_filtro,
+                )
+                | Q(tramitacoes__isnull=True)
             )
 
         # 🟡 Aguardando parecer do relator (NOVA REGRA CORRETA)
@@ -135,13 +143,8 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
         context["comissao_selecionada"] = self._comissao_selecionada()
         context["autores"] = Autor.objects.filter(ativo=True).order_by("nome")
 
-        # Combo de comissão (informativo)
-        if self.request.user.is_superuser:
-            context["comissoes"] = Comissao.objects.filter(ativa=True)
-        else:
-            context["comissoes"] = Comissao.objects.filter(
-                id=self.request.user.perfil.comissao_padrao_id
-            )
+        # Combo de comissão: todas as ativas (a do usuário vem pré-selecionada)
+        context["comissoes"] = Comissao.objects.filter(ativa=True)
 
         return context
 
@@ -295,11 +298,11 @@ class TramitacoesPainelView(LoginRequiredMixin, ListView):
         user = self.request.user
 
         # 🔒 Comissão: vem do filtro selecionado, ou por padrão a comissão
-        # registrada para o usuário (mesmo se ele for superusuário)
+        # registrada para o usuário. Valor explicitamente vazio = "Todas".
         comissao_id = self.request.GET.get("comissao")
         if comissao_id:
             comissao_selecionada = Comissao.objects.filter(pk=comissao_id).first()
-        elif getattr(user, "perfil", None) and user.perfil.comissao_padrao_id:
+        elif comissao_id is None and getattr(user, "perfil", None) and user.perfil.comissao_padrao_id:
             comissao_selecionada = user.perfil.comissao_padrao
         else:
             comissao_selecionada = None
@@ -400,19 +403,39 @@ class AutorDeleteView(LoginRequiredMixin, DeleteView):
 
 ###################################################################################
 
-class TipoProposicaoListView(LoginRequiredMixin, ListView):
+class PaginacaoTolerante:
+    """
+    Paginação que não estoura 404: página inválida cai na 1ª,
+    página além do fim cai na última.
+    """
+
+    def paginate_queryset(self, queryset, page_size):
+        paginator = self.get_paginator(
+            queryset,
+            page_size,
+            orphans=self.get_paginate_orphans(),
+            allow_empty_first_page=self.get_allow_empty(),
+        )
+        page_number = self.request.GET.get(self.page_kwarg) or 1
+        page = paginator.get_page(page_number)
+        return paginator, page, page.object_list, page.has_other_pages()
+
+
+class TipoProposicaoListView(LoginRequiredMixin, PaginacaoTolerante, ListView):
     model = TipoProposicao
     template_name = "www/tiposproposicoes/tipoproposicao_list.html"
     paginate_by = 20
+    ordering = ["sigla"]
 
 
 ###################################################################################
 
 
-class ComissaoListView(LoginRequiredMixin, ListView):
+class ComissaoListView(LoginRequiredMixin, PaginacaoTolerante, ListView):
     model = Comissao
     template_name = "www/comissoes/comissao_list.html"
     paginate_by = 20
+    ordering = ["sigla"]
 
 
 ###################################################################################
@@ -430,22 +453,8 @@ class TramitacaoListView(LoginRequiredMixin, ListView):
         except Proposicao.DoesNotExist:
             raise Http404("Proposição não encontrada")
 
-        user = self.request.user
-
-        # 🔒 Restrição por comissão (baseada na ÚLTIMA tramitação)
-        if not user.is_superuser:
-            ultima = (
-                self.proposicao.tramitacoes
-                .order_by("-data_entrada")
-                .first()
-            )
-
-            if (
-                not ultima or
-                ultima.comissao != user.perfil.comissao_padrao
-            ):
-                raise Http404("Acesso negado")
-
+        # 👁️ Leitura do histórico é livre para qualquer usuário logado.
+        # As restrições por comissão valem apenas para ações de escrita.
         return (
             Tramitacao.objects
             .filter(proposicao=self.proposicao)
@@ -498,11 +507,6 @@ class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
         if tramitacao_form.is_valid():
             tramitacao = tramitacao_form.save(commit=False)
             tramitacao.proposicao = proposicao
-
-            # 🔒 força a comissão do usuário, exceto para superusuário
-            if not user.is_superuser:
-                tramitacao.comissao = user.perfil.comissao_padrao
-
             tramitacao.save()
 
             # Votos vencidos (0 a muitos) são adicionados depois, na tela
@@ -557,13 +561,6 @@ class TramitacaoUpdateView(LoginRequiredMixin, UpdateView):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
         return kwargs
-
-    def form_valid(self, form):
-        # 🔒 garante comissão correta
-        if not self.request.user.is_superuser:
-            form.instance.comissao = self.request.user.perfil.comissao_padrao
-
-        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -644,22 +641,24 @@ class TramitacaoDetailView(LoginRequiredMixin, DetailView):
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
-        user = self.request.user
 
         # 🔐 garante que a tramitação pertence à proposição
         if obj.proposicao_id != self.proposicao.pk:
             raise Http404("Tramitação inválida")
 
-        # 🔒 permissão por comissão
-        if not user.is_superuser:
-            if obj.comissao != user.perfil.comissao_padrao:
-                raise Http404("Acesso negado")
-
+        # 👁️ Leitura é livre para qualquer usuário logado.
+        # As restrições por comissão valem apenas para ações de escrita.
         return obj
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["proposicao"] = self.proposicao
+
+        user = self.request.user
+        context["pode_editar"] = (
+            user.is_superuser
+            or self.object.comissao == getattr(user.perfil, "comissao_padrao", None)
+        )
         return context
 
 
