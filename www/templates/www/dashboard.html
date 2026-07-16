@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h3 class="mb-4">
-    Dashboard
-    {% if comissao %}
-        – {{ comissao.nome }}
-    {% endif %}
-</h3>
+<h3 class="mb-4">Dashboard</h3>
 
-<div class="row g-3">
+{% if indicadores_globais %}
+<!-- ========================= -->
+<!-- VISÃO GERAL DO SISTEMA -->
+<!-- ========================= -->
+<h5 class="mb-3">Visão Geral do Sistema</h5>
+<div class="row g-3 mb-4">
 
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
-                <h6>Total na Comissão</h6>
-                <h2>{{ total_na_comissao }}</h2>
+                <h6>Total de Proposições</h6>
+                <h2>{{ indicadores_globais.total }}</h2>
             </div>
         </div>
     </div>
@@ -23,7 +23,7 @@
         <div class="card text-center">
             <div class="card-body">
                 <h6>Aguardando Parecer</h6>
-                <h2>{{ aguardando_parecer }}</h2>
+                <h2>{{ indicadores_globais.aguardando_parecer }}</h2>
             </div>
         </div>
     </div>
@@ -32,7 +32,7 @@
         <div class="card text-center">
             <div class="card-body">
                 <h6>Entradas (30 dias)</h6>
-                <h2>{{ entradas_periodo }}</h2>
+                <h2>{{ indicadores_globais.entradas_periodo }}</h2>
             </div>
         </div>
     </div>
@@ -41,11 +41,61 @@
         <div class="card text-center">
             <div class="card-body">
                 <h6>Tempo Médio (dias)</h6>
-                <h2>{{ tempo_medio }}</h2>
+                <h2>{{ indicadores_globais.tempo_medio }}</h2>
             </div>
         </div>
     </div>
 
 </div>
+{% endif %}
+
+{% if indicadores_comissao %}
+<!-- ========================= -->
+<!-- MINHA COMISSÃO -->
+<!-- ========================= -->
+<h5 class="mb-3">
+    Minha Comissão
+    {% if comissao %} – {{ comissao.nome }}{% endif %}
+</h5>
+<div class="row g-3">
+
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>Total na Comissão</h6>
+                <h2>{{ indicadores_comissao.total }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>Aguardando Parecer</h6>
+                <h2>{{ indicadores_comissao.aguardando_parecer }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>Entradas (30 dias)</h6>
+                <h2>{{ indicadores_comissao.entradas_periodo }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>Tempo Médio (dias)</h6>
+                <h2>{{ indicadores_comissao.tempo_medio }}</h2>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endif %}
 
 {% endblock %}

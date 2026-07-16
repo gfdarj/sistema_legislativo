@@ -194,17 +194,11 @@ class ProposicaoUpdateView(LoginRequiredMixin, UpdateView):
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "www/dashboard.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        user = self.request.user
-
-        # 🔒 Comissão do usuário
-        if user.is_superuser:
-            comissao = None
-        else:
-            comissao = user.perfil.comissao_padrao
-
+    def _calcular_indicadores(self, comissao=None):
+        """
+        Calcula os 4 indicadores do dashboard.
+        comissao=None -> visão global do sistema.
+        """
         # 🔹 Proposições com data da última tramitação
         proposicoes = (
             Proposicao.objects
@@ -220,41 +214,25 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 tramitacoes__comissao=comissao
             )
 
-        # 1️⃣ Total na comissão
-        total_na_comissao = proposicoes.distinct().count()
+        total = proposicoes.distinct().count()
 
-        # 2️⃣ Aguardando parecer do relator
-        #
-        # Regra:
-        # - última tramitação na comissão
-        # - NÃO existe parecer do relator preenchido nessa tramitação
+        # Aguardando parecer do relator
         aguardando_parecer = (
             proposicoes
-            .exclude(
-                tramitacoes__relator__isnull=False
-            )
+            .exclude(tramitacoes__relator__isnull=False)
             .distinct()
             .count()
         )
 
-        # 3️⃣ Entradas no período (últimos 30 dias)
+        # Entradas no período (últimos 30 dias)
         data_inicio = now().date() - timedelta(days=30)
-
-        entradas_periodo = (
-            Tramitacao.objects
-            .filter(
-                data_entrada__gte=data_inicio
-            )
-        )
-
+        entradas_periodo = Tramitacao.objects.filter(data_entrada__gte=data_inicio)
         if comissao:
             entradas_periodo = entradas_periodo.filter(comissao=comissao)
-
         entradas_periodo = entradas_periodo.count()
 
-        # 4️⃣ Tempo médio na comissão (dias)
+        # Tempo médio na comissão (dias)
         tramitacoes = Tramitacao.objects.all()
-
         if comissao:
             tramitacoes = tramitacoes.filter(comissao=comissao)
 
@@ -272,13 +250,30 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         else:
             tempo_medio = 0
 
-        context.update({
-            "comissao": comissao,
-            "total_na_comissao": total_na_comissao,
+        return {
+            "total": total,
             "aguardando_parecer": aguardando_parecer,
             "entradas_periodo": entradas_periodo,
             "tempo_medio": round(tempo_medio, 1),
-        })
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        user = self.request.user
+        comissao_usuario = getattr(user.perfil, "comissao_padrao", None) \
+            if hasattr(user, "perfil") else None
+
+        if user.is_superuser:
+            # 🔹 Superusuário: visão global + bloco da própria comissão (se tiver)
+            context["indicadores_globais"] = self._calcular_indicadores(None)
+            if comissao_usuario:
+                context["comissao"] = comissao_usuario
+                context["indicadores_comissao"] = self._calcular_indicadores(comissao_usuario)
+        else:
+            # 🔹 Usuário comum: apenas o bloco da sua comissão
+            context["comissao"] = comissao_usuario
+            context["indicadores_comissao"] = self._calcular_indicadores(comissao_usuario)
 
         return context
 

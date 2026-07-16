@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'legislativo.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'db_sistema_legislativo.sqlite3',
     }
 }
 
@@ -120,6 +120,7 @@ STATIC_URL = 'static/'
 
 LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 
