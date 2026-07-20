@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mb-4">Tramitações</h3>
+
+<form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-4">
+        <label class="form-label">Comissão</label>
+        <select name="comissao" class="form-select">
+            <option value="">Todas</option>
+            {% for c in comissoes %}
+            <option value="{{ c.pk }}" {% if comissao_selecionada.pk == c.pk %}selected{% endif %}>
+                {{ c.sigla }} – {{ c.nome }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-5">
+        <label class="form-label">Reunião ({{ ano_atual }})</label>
+        <select name="reuniao" class="form-select">
+            <option value="">Todas</option>
+            {% for r in reunioes %}
+            <option value="{{ r.pk }}" {% if reuniao_selecionada.pk == r.pk %}selected{% endif %}>
+                {{ r.descricao_combo }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a href="{% url 'tramitacoes_painel' %}" class="btn btn-outline-secondary">Limpar</a>
+    </div>
+</form>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Tipo</th>
+            <th>Número</th>
+            <th>Ementa</th>
+            <th>Comissão Atual</th>
+            <th>Relator Atual</th>
+            <th style="width: 110px;">Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in proposicoes %}
+        <tr>
+            <td>{{ p.tipo.sigla }}</td>
+            <td>{{ p.numero_formatado }}</td>
+            <td>{{ p.ementa|truncatechars:120 }}</td>
+            <td>{{ p.comissao_atual|default:"—" }}</td>
+            <td>{{ p.relator_atual|default:"—" }}</td>
+            <td>
+                <a href="{% url 'tramitacao_list' p.pk %}">
+                    Tramitações
+                </a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center">
+                Nenhuma proposição encontrada para os filtros selecionados.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<nav aria-label="Paginação">
+  <ul class="pagination justify-content-center">
+
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page=1{% if querystring %}&{{ querystring }}{% endif %}">
+          « Primeira
+        </a>
+      </li>
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">
+          ‹ Anterior
+        </a>
+      </li>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if num >= page_obj.number|add:-3 and num <= page_obj.number|add:3 %}
+        {% if page_obj.number == num %}
+          <li class="page-item active">
+            <span class="page-link">{{ num }}</span>
+          </li>
+        {% else %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}">
+              {{ num }}
+            </a>
+          </li>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">
+          Próxima ›
+        </a>
+      </li>
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ page_obj.paginator.num_pages }}{% if querystring %}&{{ querystring }}{% endif %}">
+          Última »
+        </a>
+      </li>
+    {% endif %}
+
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

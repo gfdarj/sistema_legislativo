@@ -154,41 +154,6 @@ class ProposicaoDetailView(LoginRequiredMixin, DetailView):
     template_name = "www/proposicao_detail.html"
 
 
-class ProposicaoCreateView(LoginRequiredMixin, CreateView):
-    model = Proposicao
-    form_class = ProposicaoForm
-    template_name = "www/proposicao_form.html"
-    success_url = reverse_lazy("proposicao_list")
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
-        return kwargs
-
-
-class ProposicaoUpdateView(LoginRequiredMixin, UpdateView):
-    model = Proposicao
-    form_class = ProposicaoForm
-    template_name = "www/proposicao_form.html"
-    success_url = reverse_lazy("proposicao_list")
-
-    def get_object(self, queryset=None):
-        obj = super().get_object(queryset)
-        user = self.request.user
-
-        if user.is_superuser:
-            return obj
-
-        try:
-            ultima = obj.tramitacoes.order_by("-data_entrada").first()
-            if not ultima or ultima.comissao != user.perfil.comissao_padrao:
-                raise Http404("Acesso negado")
-        except:
-            raise Http404("Acesso negado")
-
-        return obj
-
-
 ###################################################################################
 
 class DashboardView(LoginRequiredMixin, TemplateView):

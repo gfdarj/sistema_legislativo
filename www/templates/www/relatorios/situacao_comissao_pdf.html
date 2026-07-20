@@ -1,0 +1,65 @@
+{% extends "www/relatorios/base_pdf.html" %}
+
+{% block titulo %}Situação da Comissão{% endblock %}
+{% block cabecalho %}Situação da Comissão{% endblock %}
+
+{% block subtitulo %}
+<div class="subtitulo">{{ comissao.nome }} ({{ comissao.sigla }})</div>
+{% endblock %}
+
+{% block conteudo %}
+<p>
+    <strong>{{ total }}</strong> proposição(ões) em tramitação na comissão,
+    sendo <strong>{{ aguardando|length }}</strong> aguardando parecer do relator.
+</p>
+
+<h2>Aguardando parecer do relator ({{ aguardando|length }})</h2>
+<table>
+    <thead>
+        <tr>
+            <th style="width:18%;">Proposição</th>
+            <th>Ementa</th>
+            <th style="width:12%;">Entrada</th>
+            <th style="width:8%;">Dias</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in aguardando %}
+        <tr>
+            <td>{{ item.proposicao.tipo.sigla }} {{ item.proposicao.numero_formatado }}</td>
+            <td>{{ item.proposicao.ementa|truncatechars:160 }}</td>
+            <td class="center">{{ item.tramitacao.data_entrada|date:"d/m/Y" }}</td>
+            <td class="center {% if item.dias > 30 %}destaque{% endif %}">{{ item.dias }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="muted">Nenhuma proposição aguardando parecer.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Com relator designado ({{ com_relator|length }})</h2>
+<table>
+    <thead>
+        <tr>
+            <th style="width:18%;">Proposição</th>
+            <th style="width:22%;">Relator</th>
+            <th>Parecer</th>
+            <th style="width:12%;">Entrada</th>
+            <th style="width:8%;">Dias</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in com_relator %}
+        <tr>
+            <td>{{ item.proposicao.tipo.sigla }} {{ item.proposicao.numero_formatado }}</td>
+            <td>{{ item.tramitacao.relator }}</td>
+            <td>{{ item.tramitacao.parecer|default:"—" }}</td>
+            <td class="center">{{ item.tramitacao.data_entrada|date:"d/m/Y" }}</td>
+            <td class="center">{{ item.dias }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="muted">Nenhuma proposição com relator designado.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mb-4">Relatório – Situação da Comissão</h3>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-md-5">
+        <select name="comissao" class="form-select">
+            <option value="">Selecione a comissão…</option>
+            {% for c in comissoes %}
+            <option value="{{ c.pk }}" {% if comissao.pk == c.pk %}selected{% endif %}>
+                {{ c.sigla }} – {{ c.nome }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100">Consultar</button>
+    </div>
+    {% if comissao %}
+    <div class="col-md-3">
+        <a href="{% url 'relatorio_situacao_comissao_pdf' %}?comissao={{ comissao.pk }}"
+           target="_blank" class="btn btn-outline-primary w-100">
+            📄 Gerar PDF
+        </a>
+    </div>
+    {% endif %}
+</form>
+
+{% if comissao %}
+    <p>
+        <strong>{{ comissao.nome }}</strong> —
+        {{ total }} proposição(ões) em tramitação,
+        sendo {{ aguardando|length }} aguardando parecer.
+    </p>
+
+    <h5 class="mt-4">🟡 Aguardando parecer do relator ({{ aguardando|length }})</h5>
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Proposição</th>
+                <th>Ementa</th>
+                <th style="width:120px;">Entrada</th>
+                <th style="width:80px;">Dias</th>
+                <th style="width:110px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in aguardando %}
+            <tr>
+                <td>{{ item.proposicao.tipo.sigla }} {{ item.proposicao.numero_formatado }}</td>
+                <td>{{ item.proposicao.ementa|truncatechars:100 }}</td>
+                <td>{{ item.tramitacao.data_entrada|date:"d/m/Y" }}</td>
+                <td class="{% if item.dias > 30 %}text-danger fw-bold{% endif %}">{{ item.dias }}</td>
+                <td><a href="{% url 'tramitacao_list' item.proposicao.pk %}">Tramitações</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-muted">Nenhuma proposição aguardando parecer.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h5 class="mt-4">🟢 Com relator designado ({{ com_relator|length }})</h5>
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Proposição</th>
+                <th>Relator</th>
+                <th>Parecer</th>
+                <th style="width:120px;">Entrada</th>
+                <th style="width:80px;">Dias</th>
+                <th style="width:110px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in com_relator %}
+            <tr>
+                <td>{{ item.proposicao.tipo.sigla }} {{ item.proposicao.numero_formatado }}</td>
+                <td>{{ item.tramitacao.relator }}</td>
+                <td>{{ item.tramitacao.parecer|default:"—" }}</td>
+                <td>{{ item.tramitacao.data_entrada|date:"d/m/Y" }}</td>
+                <td>{{ item.dias }}</td>
+                <td><a href="{% url 'tramitacao_list' item.proposicao.pk %}">Tramitações</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-muted">Nenhuma proposição com relator designado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p class="text-muted">Selecione uma comissão para consultar a situação atual.</p>
+{% endif %}
+{% endblock %}

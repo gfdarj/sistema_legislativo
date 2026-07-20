@@ -1,0 +1,66 @@
+{% extends "www/relatorios/base_pdf.html" %}
+
+{% block titulo %}Dossiê – {{ proposicao.numero_formatado }}{% endblock %}
+{% block cabecalho %}Dossiê da Proposição{% endblock %}
+
+{% block subtitulo %}
+<div class="subtitulo">
+    {{ proposicao.tipo.nome }} {{ proposicao.numero_formatado }}
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<h2>Dados da Proposição</h2>
+<table>
+    <tr><th style="width:22%;">Tipo</th><td>{{ proposicao.tipo.nome }} ({{ proposicao.tipo.sigla }})</td></tr>
+    <tr><th>Número</th><td>{{ proposicao.numero_formatado }}</td></tr>
+    <tr><th>Data de Publicação</th><td>{{ proposicao.data_publicacao|date:"d/m/Y" }}</td></tr>
+    <tr><th>Autores</th>
+        <td>
+            {% for a in proposicao.autores.all %}{{ a.nome }}{% if not forloop.last %}; {% endif %}{% endfor %}
+        </td>
+    </tr>
+    <tr><th>Ementa</th><td>{{ proposicao.ementa }}</td></tr>
+    {% if proposicao.link_proposicao %}
+    <tr><th>Link</th><td>{{ proposicao.link_proposicao }}</td></tr>
+    {% endif %}
+</table>
+
+<h2>Tramitações ({{ proposicao.tramitacoes.count }})</h2>
+
+{% for t in proposicao.tramitacoes.all %}
+    <table>
+        <tr>
+            <th style="width:22%;">Comissão</th>
+            <td>{{ t.comissao.nome }} ({{ t.comissao.sigla }})</td>
+        </tr>
+        <tr><th>Entrada</th><td>{{ t.data_entrada|date:"d/m/Y" }}</td></tr>
+        {% if t.data_saida %}<tr><th>Saída</th><td>{{ t.data_saida|date:"d/m/Y" }}</td></tr>{% endif %}
+        {% if t.observacao %}<tr><th>Observação</th><td>{{ t.observacao }}</td></tr>{% endif %}
+        <tr><th>Pedido de Vista</th><td>{{ t.pedido_vista|yesno:"Sim,Não" }}</td></tr>
+        {% if t.relator %}
+        <tr><th>Reunião</th><td>{{ t.reuniao.descricao_combo|default:"—" }}</td></tr>
+        <tr><th>Relator</th><td>{{ t.relator.nome }}</td></tr>
+        <tr><th>Parecer</th><td>{{ t.parecer }}</td></tr>
+        <tr><th>Texto do Parecer</th><td>{{ t.texto|safe }}</td></tr>
+        {% else %}
+        <tr><th>Parecer do Relator</th><td class="muted">Aguardando parecer</td></tr>
+        {% endif %}
+    </table>
+
+    {% for voto in t.pareceres_vencidos.all %}
+    <div style="margin-left: 20px;">
+    <table>
+        <tr><th colspan="2" style="background:#f4e6e6;">Voto em separado (vencido)</th></tr>
+        <tr><th style="width:22%;">Relator</th><td>{{ voto.relator.nome }}</td></tr>
+        <tr><th>Reunião</th><td>{{ voto.reuniao.descricao_combo }}</td></tr>
+        <tr><th>Data de Apresentação</th><td>{{ voto.data_apresentacao|date:"d/m/Y" }}</td></tr>
+        <tr><th>Parecer</th><td>{{ voto.parecer }}</td></tr>
+        <tr><th>Texto</th><td>{{ voto.texto|safe }}</td></tr>
+    </table>
+    </div>
+    {% endfor %}
+{% empty %}
+    <p class="muted">Nenhuma tramitação registrada.</p>
+{% endfor %}
+{% endblock %}

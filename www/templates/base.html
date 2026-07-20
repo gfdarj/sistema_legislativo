@@ -35,21 +35,31 @@
             <a class="nav-link" href="{% url 'tramitacoes_painel' %}">Tramitações</a>
           </li>
 
-          <!-- PROJETOS -->
+          <!-- PROPOSIÇÕES -->
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'proposicao_list' %}">Proposições</a>
+          </li>
+
+          <!-- RELATÓRIOS -->
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button"
                data-bs-toggle="dropdown">
-              Proposições
+              Relatórios
             </a>
             <ul class="dropdown-menu">
               <li>
-                <a class="dropdown-item" href="{% url 'proposicao_list' %}">
-                  Listar Proposições
+                <a class="dropdown-item" href="{% url 'relatorio_situacao_comissao' %}">
+                  Situação da Comissão
                 </a>
               </li>
               <li>
-                <a class="dropdown-item" href="{% url 'proposicao_create' %}">
-                  Nova Proposições
+                <a class="dropdown-item" href="{% url 'relatorio_pendencias_reunioes' %}">
+                  Pendências das Reuniões
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'relatorio_dossie' %}">
+                  Dossiê da Proposição
                 </a>
               </li>
             </ul>

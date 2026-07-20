@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+    {{ form.media }}
+{% endblock %}
+
+{% block content %}
+<h3 class="mb-3">
+    Voto Vencido – {{ proposicao }}
+</h3>
+<p class="text-muted">
+    Tramitação: {{ tramitacao.comissao }} ({{ tramitacao.data_entrada|date:"d/m/Y" }})
+</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Reunião</label>
+            {{ form.reuniao }}
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Relator</label>
+            {{ form.relator }}
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Parecer</label>
+        {{ form.parecer }}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Texto do Parecer</label>
+        {{ form.texto }}
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <label class="form-label">Data de Apresentação</label>
+        {{ form.data_apresentacao }}
+    </div>
+
+    <div class="mb-4">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a href="{% url 'tramitacao_detail' proposicao.pk tramitacao.pk %}" class="btn btn-secondary">
+            Cancelar
+        </a>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "www/relatorios/base_pdf.html" %}
+
+{% block titulo %}Pendências Documentais das Reuniões{% endblock %}
+{% block cabecalho %}Pendências Documentais das Reuniões{% endblock %}
+
+{% block subtitulo %}
+<div class="subtitulo">
+    Ano: {{ ano }}
+    {% if comissao %} — {{ comissao.nome }} ({{ comissao.sigla }}){% else %} — Todas as comissões{% endif %}
+    {% if somente_pendentes %} — somente reuniões com pendências{% endif %}
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<table>
+    <thead>
+        <tr>
+            <th style="width:10%;">Comissão</th>
+            <th style="width:32%;">Reunião</th>
+            <th style="width:12%;">Data</th>
+            <th>Pendências</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for linha in linhas %}
+        <tr>
+            <td>{{ linha.reuniao.comissao.sigla }}</td>
+            <td>{{ linha.reuniao.descricao }}</td>
+            <td class="center">{{ linha.reuniao.data|date:"d/m/Y" }}</td>
+            <td>
+                {% if linha.pendencias %}
+                    <span class="destaque">{{ linha.pendencias|join:", " }}</span>
+                {% else %}
+                    <span class="ok">Sem pendências</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="muted">Nenhuma reunião encontrada para os filtros.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

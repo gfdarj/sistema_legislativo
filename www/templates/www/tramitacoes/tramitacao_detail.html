@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mb-3">Tramitação – {{ proposicao }}</h3>
+
+<!-- ========================= -->
+<!-- TRAMITAÇÃO -->
+<!-- ========================= -->
+<div class="card mb-4">
+    <div class="card-header fw-bold">Tramitação</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <strong>Comissão:</strong> {{ tramitacao.comissao }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <strong>Data de Entrada:</strong> {{ tramitacao.data_entrada|date:"d/m/Y" }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <strong>Data de Saída:</strong> {{ tramitacao.data_saida|date:"d/m/Y"|default:"—" }}
+            </div>
+        </div>
+        <div class="mb-3">
+            <strong>Pedido de Vista:</strong>
+            {% if tramitacao.pedido_vista %}
+                <span class="badge bg-warning text-dark">Sim</span>
+            {% else %}
+                <span class="badge bg-secondary">Não</span>
+            {% endif %}
+        </div>
+        <div class="mb-0">
+            <strong>Observação</strong>
+            <div class="border rounded p-2">
+                {{ tramitacao.observacao|default:"—"|linebreaks }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- PARECER DO RELATOR -->
+<!-- ========================= -->
+<div class="card mb-4">
+    <div class="card-header fw-bold">Parecer do Relator</div>
+    <div class="card-body">
+        {% if tramitacao.relator %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <strong>Reunião:</strong> {{ tramitacao.reuniao|default:"—" }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>Relator:</strong> {{ tramitacao.relator }}
+                </div>
+            </div>
+            <div class="mb-3">
+                <strong>Parecer:</strong> {{ tramitacao.parecer }}
+            </div>
+            <div class="mb-3">
+                <strong>Texto</strong>
+                <div class="border rounded p-2">
+                    {{ tramitacao.texto|default:"—"|safe }}
+                </div>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">
+                Aguardando parecer do relator.
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- VOTOS VENCIDOS (grid) -->
+<!-- ========================= -->
+<div class="card mb-4">
+    <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+        Votos Vencidos
+        {% if pode_editar %}
+        <a href="{% url 'parecer_vencido_create' tramitacao.pk %}" class="btn btn-sm btn-outline-secondary">
+            ➕ Adicionar voto vencido
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Reunião</th>
+                    <th>Relator</th>
+                    <th>Parecer</th>
+                    <th>Data</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for voto in tramitacao.pareceres_vencidos.all %}
+                <tr>
+                    <td>{{ voto.reuniao }}</td>
+                    <td>{{ voto.relator }}</td>
+                    <td>{{ voto.parecer }}</td>
+                    <td>{{ voto.data_apresentacao|date:"d/m/Y" }}</td>
+                    <td class="text-end">
+                        {% if pode_editar %}
+                        <a href="{% url 'parecer_vencido_update' tramitacao.pk voto.pk %}">Editar</a>
+                        &nbsp;|&nbsp;
+                        <a href="{% url 'parecer_vencido_delete' tramitacao.pk voto.pk %}">Excluir</a>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-muted">Nenhum voto vencido registrado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if pode_editar %}
+<a href="{% url 'tramitacao_update' proposicao.pk tramitacao.pk %}" class="btn btn-warning">
+    Editar Tramitação
+</a>
+{% endif %}
+<a href="{% url 'tramitacao_pdf' tramitacao.pk %}" class="btn btn-outline-primary" target="_blank">
+    Gerar PDF
+</a>
+<a href="{% url 'tramitacao_list' proposicao.pk %}" class="btn btn-secondary">
+    Voltar
+</a>
+{% endblock %}

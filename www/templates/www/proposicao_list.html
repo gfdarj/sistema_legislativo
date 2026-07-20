@@ -81,7 +81,6 @@
             <td>{{ p.comissao_atual|default:"—" }}</td>
             <td>{{ p.relator_atual|default:"—" }}</td>
             <td>
-                <a href="{% url 'proposicao_update' p.pk %}">Editar</a> |
                 <a href="{% url 'tramitacao_list' p.pk %}">Tramitações</a>
             </td>
         </tr>

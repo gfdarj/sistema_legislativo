@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mb-4">Relatório – Pendências Documentais das Reuniões</h3>
+
+<form method="get" class="row g-2 align-items-center mb-4">
+    <div class="col-md-2">
+        <select name="ano" class="form-select">
+            {% for a in anos %}
+            <option value="{{ a.year }}" {% if ano == a.year %}selected{% endif %}>{{ a.year }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-4">
+        <select name="comissao" class="form-select">
+            <option value="">Todas as comissões</option>
+            {% for c in comissoes %}
+            <option value="{{ c.pk }}" {% if comissao.pk == c.pk %}selected{% endif %}>
+                {{ c.sigla }} – {{ c.nome }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2 form-check ms-2">
+        <input type="checkbox" name="todas" value="1" class="form-check-input"
+               id="chk-todas" {% if not somente_pendentes %}checked{% endif %}>
+        <label class="form-check-label" for="chk-todas">Incluir sem pendência</label>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100">Consultar</button>
+    </div>
+    <div class="col-md-2">
+        <a href="{% url 'relatorio_pendencias_reunioes_pdf' %}?ano={{ ano }}&comissao={{ comissao.pk|default:'' }}{% if not somente_pendentes %}&todas=1{% endif %}"
+           target="_blank" class="btn btn-outline-primary w-100">
+            📄 Gerar PDF
+        </a>
+    </div>
+</form>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Comissão</th>
+            <th>Reunião</th>
+            <th style="width:110px;">Data</th>
+            <th>Pendências</th>
+            <th style="width:80px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for linha in linhas %}
+        <tr>
+            <td>{{ linha.reuniao.comissao.sigla }}</td>
+            <td>{{ linha.reuniao.descricao }}</td>
+            <td>{{ linha.reuniao.data|date:"d/m/Y" }}</td>
+            <td>
+                {% for p in linha.pendencias %}
+                    <span class="badge bg-danger">{{ p }}</span>
+                {% empty %}
+                    <span class="badge bg-success">Sem pendências</span>
+                {% endfor %}
+            </td>
+            <td><a href="{% url 'reuniao_detail' linha.reuniao.pk %}">Ver</a></td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="text-muted">
+                Nenhuma reunião {% if somente_pendentes %}com pendências {% endif %}encontrada para os filtros.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

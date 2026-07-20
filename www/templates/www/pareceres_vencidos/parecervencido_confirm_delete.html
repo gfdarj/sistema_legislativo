@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mb-3">Excluir Voto Vencido</h3>
+
+<p>
+    Confirma a exclusão do voto vencido de
+    <strong>{{ object.relator }}</strong>
+    apresentado em <strong>{{ object.data_apresentacao|date:"d/m/Y" }}</strong>?
+</p>
+
+<form method="post">
+    {% csrf_token %}
+    <a href="{% url 'tramitacao_detail' proposicao.pk tramitacao.pk %}" class="btn btn-secondary">
+        Cancelar
+    </a>
+    <button type="submit" class="btn btn-danger">
+        Confirmar Exclusão
+    </button>
+</form>
+{% endblock %}
