@@ -104,10 +104,21 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
             qs = qs.filter(tipo_id=tipo)
 
         if numero:
-            qs = qs.filter(
-                Q(numero__icontains=numero) |
-                Q(numero_formatado__icontains=numero)
-            )
+            termo = numero.strip()
+            inicio_livre = termo.startswith("*")   # * no começo -> não ancora no início
+            fim_livre = termo.endswith("*")        # * no fim -> não ancora no fim
+            termo = termo.strip("*")
+
+            # Busca apenas no campo 'numero' (ano + código interno),
+            # por isso "2025" traz proposições DE 2025.
+            if not termo:
+                pass  # só asteriscos: ignora o filtro
+            elif inicio_livre and fim_livre:
+                qs = qs.filter(numero__icontains=termo)      # *2025* -> contém
+            elif inicio_livre:
+                qs = qs.filter(numero__iendswith=termo)      # *2025 -> termina com
+            else:
+                qs = qs.filter(numero__istartswith=termo)    # 2025 / 2025* -> começa com
 
         if autor:
             qs = qs.filter(autores__id=autor)
@@ -128,7 +139,7 @@ class ProposicaoListView(LoginRequiredMixin, ListView):
                 .exclude(tramitacoes__relator__isnull=False)
             )
 
-        return qs.distinct().order_by("-ultima_data", "-data_publicacao")
+        return qs.distinct().order_by("numero")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -467,6 +478,7 @@ class TramitacaoComParecerCreateView(LoginRequiredMixin, View):
         if tramitacao_form.is_valid():
             tramitacao = tramitacao_form.save(commit=False)
             tramitacao.proposicao = proposicao
+            tramitacao.usuario_inclusao = user  # 📝 auditoria
             tramitacao.save()
 
             # Votos vencidos (0 a muitos) são adicionados depois, na tela
@@ -521,6 +533,10 @@ class TramitacaoUpdateView(LoginRequiredMixin, UpdateView):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
         return kwargs
+
+    def form_valid(self, form):
+        form.instance.usuario_alteracao = self.request.user  # 📝 auditoria
+        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

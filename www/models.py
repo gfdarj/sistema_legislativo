@@ -247,6 +247,29 @@ class Tramitacao(models.Model):
         verbose_name="Pedido de Vista"
     )
 
+    # =========================
+    # 🔹 AUDITORIA
+    # =========================
+    usuario_inclusao = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="tramitacoes_incluidas",
+        verbose_name="Usuário de Inclusão",
+        editable=False,
+    )
+    usuario_alteracao = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="tramitacoes_alteradas",
+        verbose_name="Usuário da Última Alteração",
+        editable=False,
+    )
+    alterada_em = models.DateTimeField(auto_now=True, null=True)
+
     class Meta:
         ordering = ["data_entrada"]
 

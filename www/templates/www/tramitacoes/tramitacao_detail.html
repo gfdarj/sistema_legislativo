@@ -130,4 +130,16 @@
 <a href="{% url 'tramitacao_list' proposicao.pk %}" class="btn btn-secondary">
     Voltar
 </a>
+
+<hr class="mt-4 mb-2">
+<footer class="text-muted small pb-3">
+    Incluída por
+    <strong>{{ tramitacao.usuario_inclusao.username|default:"—" }}</strong>
+    em {{ tramitacao.criada_em|date:"d/m/Y H:i" }}
+    {% if tramitacao.usuario_alteracao %}
+        · Última alteração por
+        <strong>{{ tramitacao.usuario_alteracao.username }}</strong>
+        em {{ tramitacao.alterada_em|date:"d/m/Y H:i" }}
+    {% endif %}
+</footer>
 {% endblock %}
