@@ -47,8 +47,9 @@ Plataforma DJANGO para tentar substituir a planilha por uma interface gráfica w
 
       obs: o Python lê diretamente da pasta "fixtures"
 
+* Exportando todo o banco de dados SQLite para 1 arquivo JSON
 
-
+      python manage.py dumpdata --natural-foreign --natural-primary -e contenttypes -e auth.Permission --indent 4 > meubanco.json
 
 
 
